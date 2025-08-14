@@ -1,28 +1,40 @@
 import './App.css';
-// 1. Import the necessary components from react-router-dom
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// 2. Import the page components we have created
+// Import our pages and the new ProtectedRoute component
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-import RegisterPage from './pages/RegisterPage'; // Import the new RegisterPage
+import RegisterPage from './pages/RegisterPage';
+import CreateCafePage from './pages/CreateCafePage'; // 1. Import the new page
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    // 3. Wrap our entire application in the Router component
     <Router>
       <div>
-        {/* The Routes component will manage all our different routes */}
         <Routes>
-          {/* 4. Define our routes. */}
-          {/* This says: when the URL is exactly '/', show the LoginPage component. */}
+          {/* Public Routes */}
           <Route path="/" element={<LoginPage />} />
-
-          {/* This says: when the URL is '/register', show the RegisterPage component. */}
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* This says: when the URL is '/dashboard', show the DashboardPage component. */}
-          <Route path="/dashboard" element={<DashboardPage />} />
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* 2. Add the new protected route for creating a cafe */}
+          <Route
+            path="/create-cafe"
+            element={
+              <ProtectedRoute>
+                <CreateCafePage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </div>
     </Router>
