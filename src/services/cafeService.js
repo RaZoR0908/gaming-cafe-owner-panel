@@ -2,53 +2,52 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:5000/api/cafes/';
 
-// This function will fetch all cafes (public)
+// Helper function to get the user's token from local storage
+const getAuthHeader = () => {
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (user && user.token) {
+    return { Authorization: `Bearer ${user.token}` };
+  } else {
+    return {};
+  }
+};
+
+// Fetches all cafes (public)
 const getAllCafes = () => {
   return axios.get(API_URL);
 };
 
 // Fetches the logged-in owner's cafe (protected)
 const getMyCafe = async () => {
-  // 1. Get the user data from local storage.
-  const user = JSON.parse(localStorage.getItem('user'));
-
-  // 2. Safety check: if there's no user or token, we can't proceed.
-  if (!user || !user.token) {
-    throw new Error('Not authorized, no token found');
-  }
-
-  // 3. Create the configuration object for our API call.
-  //    This is where we add the all-important Authorization header.
-  const config = {
-    headers: {
-      Authorization: `Bearer ${user.token}`,
-    },
-  };
-
-  // 4. Make the authenticated GET request to our new backend endpoint.
+  const config = { headers: getAuthHeader() };
   const response = await axios.get(API_URL + 'my-cafe', config);
+  return response.data;
+};
 
-  // 5. Return the data from the backend.
+// Creates a new cafe (protected)
+const createCafe = async (cafeData) => {
+  const config = { headers: getAuthHeader() };
+  const response = await axios.post(API_URL, cafeData, config);
+  return response.data;
+};
+
+// Gets a single cafe's details by its ID (public)
+const getCafeById = (id) => {
+  return axios.get(API_URL + id);
+};
+
+// Updates a cafe's details (protected)
+const updateCafe = async (id, cafeData) => {
+  const config = { headers: getAuthHeader() };
+  const response = await axios.put(API_URL + id, cafeData, config);
   return response.data;
 };
 
 // ADD THIS NEW FUNCTION
-// Creates a new cafe (protected)
-const createCafe = async (cafeData) => {
-  const user = JSON.parse(localStorage.getItem('user'));
-
-  if (!user || !user.token) {
-    throw new Error('Not authorized, no token found');
-  }
-
-  const config = {
-    headers: {
-      Authorization: `Bearer ${user.token}`,
-    },
-  };
-
-  // Make the authenticated POST request to create the cafe.
-  const response = await axios.post(API_URL, cafeData, config);
+// Deletes a cafe (protected)
+const deleteCafe = async (id) => {
+  const config = { headers: getAuthHeader() };
+  const response = await axios.delete(API_URL + id, config);
   return response.data;
 };
 
@@ -56,7 +55,10 @@ const createCafe = async (cafeData) => {
 const cafeService = {
   getAllCafes,
   getMyCafe,
-  createCafe, // Add the new function here
+  createCafe,
+  getCafeById,
+  updateCafe,
+  deleteCafe, // Add the new function
 };
 
 export default cafeService;

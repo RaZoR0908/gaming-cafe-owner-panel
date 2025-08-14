@@ -1,11 +1,11 @@
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Import our pages and the new ProtectedRoute component
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import RegisterPage from './pages/RegisterPage';
-import CreateCafePage from './pages/CreateCafePage'; // 1. Import the new page
+import CreateCafePage from './pages/CreateCafePage';
+import EditCafePage from './pages/EditCafePage'; // 1. Import the new page
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -20,20 +20,17 @@ function App() {
           {/* Protected Routes */}
           <Route
             path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
+            element={<ProtectedRoute><DashboardPage /></ProtectedRoute>}
           />
-          {/* 2. Add the new protected route for creating a cafe */}
           <Route
             path="/create-cafe"
-            element={
-              <ProtectedRoute>
-                <CreateCafePage />
-              </ProtectedRoute>
-            }
+            element={<ProtectedRoute><CreateCafePage /></ProtectedRoute>}
+          />
+          {/* 2. Add the new protected route for editing a cafe */}
+          {/* Notice the ':id' which makes the route dynamic */}
+          <Route
+            path="/edit-cafe/:id"
+            element={<ProtectedRoute><EditCafePage /></ProtectedRoute>}
           />
         </Routes>
       </div>
