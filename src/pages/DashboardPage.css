@@ -29,3 +29,76 @@
 .dashboard-content {
   padding: 30px;
 }
+
+/* This style was missing from your provided code */
+.button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* Styles for the new sections */
+.cafe-details-card, .bookings-section {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+.bookings-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.bookings-table th, .bookings-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.bookings-table th {
+  background-color: #f7f7f7;
+  font-weight: bold;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.button-complete, .button-cancel, .button-reconfirm {
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.button-complete {
+  background-color: #28a745; /* Green */
+}
+.button-complete:hover {
+  background-color: #218838;
+}
+
+.button-cancel {
+  background-color: #ffc107; /* Amber */
+}
+.button-cancel:hover {
+  background-color: #e0a800;
+}
+
+.button-reconfirm {
+  background-color: #6c757d; /* Gray */
+}
+.button-reconfirm:hover {
+  background-color: #5a6268;
+}

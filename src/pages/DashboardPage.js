@@ -6,19 +6,26 @@ import cafeService from '../services/cafeService';
 const DashboardPage = () => {
   const [user, setUser] = useState(null);
   const [myCafe, setMyCafe] = useState(null);
+  // 1. Add state to store the list of bookings
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const navigate = useNavigate();
 
-  // We wrap fetchCafeData in useCallback to prevent it from being re-created on every render
+  // 2. Update the fetch function to also get bookings
   const fetchCafeData = useCallback(async () => {
     setLoading(true);
     try {
       const cafe = await cafeService.getMyCafe();
       setMyCafe(cafe);
+      // If a cafe is found, fetch its bookings
+      if (cafe) {
+        const cafeBookings = await cafeService.getOwnerBookings(cafe._id);
+        setBookings(cafeBookings);
+      }
     } catch (err) {
-      setError('Failed to fetch cafe data.');
+      setError('Failed to fetch data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -39,17 +46,28 @@ const DashboardPage = () => {
     navigate('/');
   };
 
-  // 1. Add a handler function for the delete button
   const handleDelete = async () => {
-    // Show a confirmation dialog to prevent accidental deletion
     if (window.confirm('Are you sure you want to delete your cafe? This action cannot be undone.')) {
       try {
         await cafeService.deleteCafe(myCafe._id);
-        // After successful deletion, update the state to show the "Create Cafe" button again
-        setMyCafe(null); 
+        setMyCafe(null);
+        setBookings([]); // Clear bookings from state as well
       } catch (err) {
         setError('Failed to delete cafe. Please try again.');
       }
+    }
+  };
+
+  // 3. Add the handler for updating booking status
+  const handleStatusUpdate = async (bookingId, newStatus) => {
+    try {
+      await cafeService.updateBookingStatus(bookingId, newStatus);
+      // Update the booking list in our state to show the change immediately
+      setBookings(bookings.map(b => 
+        b._id === bookingId ? { ...b, status: newStatus } : b
+      ));
+    } catch (err) {
+      setError('Failed to update booking status.');
     }
   };
 
@@ -72,20 +90,59 @@ const DashboardPage = () => {
 
         {myCafe ? (
           <div>
-            <h2>Your Cafe Details</h2>
-            <p><strong>Name:</strong> {myCafe.name}</p>
-            <p><strong>Address:</strong> {myCafe.address}</p>
-            <p><strong>Opens:</strong> {myCafe.openingTime}</p>
-            <p><strong>Closes:</strong> {myCafe.closingTime}</p>
-            
-            <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-              <Link to={`/edit-cafe/${myCafe._id}`}>
-                <button className="button">Edit Cafe Details</button>
-              </Link>
-              {/* 2. Add the Delete button and link it to the handler */}
-              <button onClick={handleDelete} className="logout-button">
-                Delete Cafe
-              </button>
+            <div className="cafe-details-card">
+              <h2>Your Cafe Details</h2>
+              <p><strong>Name:</strong> {myCafe.name}</p>
+              <p><strong>Address:</strong> {myCafe.address}</p>
+              <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+                <Link to={`/edit-cafe/${myCafe._id}`}><button className="button">Edit Details</button></Link>
+                <button onClick={handleDelete} className="logout-button">Delete Cafe</button>
+              </div>
+            </div>
+
+            {/* 4. Add the bookings section */}
+            <div className="bookings-section">
+              <h2>Bookings Management</h2>
+              {bookings.length > 0 ? (
+                <table className="bookings-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Time</th>
+                      <th>System</th>
+                      <th>Duration</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bookings.map((booking) => (
+                      <tr key={booking._id}>
+                        <td>{new Date(booking.bookingDate).toLocaleDateString()}</td>
+                        <td>{booking.startTime}</td>
+                        <td>{booking.systemType}</td>
+                        <td>{booking.duration} hours</td>
+                        <td>{booking.status}</td>
+                        <td>
+                          <div className="action-buttons">
+                            {booking.status === 'Confirmed' && (
+                              <>
+                                <button onClick={() => handleStatusUpdate(booking._id, 'Completed')} className="button-complete">Complete</button>
+                                <button onClick={() => handleStatusUpdate(booking._id, 'Cancelled')} className="button-cancel">Cancel</button>
+                              </>
+                            )}
+                            {(booking.status === 'Cancelled' || booking.status === 'Completed') && (
+                               <button onClick={() => handleStatusUpdate(booking._id, 'Confirmed')} className="button-reconfirm">Re-confirm</button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p>You have no bookings yet.</p>
+              )}
             </div>
           </div>
         ) : (
