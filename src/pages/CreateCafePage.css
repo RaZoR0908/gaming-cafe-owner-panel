@@ -59,3 +59,51 @@
   background-color: #a0c3e6;
   cursor: not-allowed;
 }
+
+/* --- NEW STYLES for Dynamic Form --- */
+.rooms-section {
+  grid-column: 1 / -1;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.room-card {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.system-card {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  align-items: flex-end;
+  margin-bottom: 15px;
+}
+
+.button-add, .button-remove {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  color: white;
+}
+
+.button-add {
+  background-color: #28a745; /* Green */
+}
+
+.button-remove {
+  background-color: #dc3545; /* Red */
+}

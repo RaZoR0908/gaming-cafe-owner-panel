@@ -13,35 +13,43 @@ const getAuthHeader = () => {
   }
 };
 
-// --- Cafe Functions ---
+// Fetches all cafes (public)
 const getAllCafes = () => {
   return axios.get(CAFE_API_URL);
 };
+
+// Fetches the logged-in owner's cafe (protected)
 const getMyCafe = async () => {
   const config = { headers: getAuthHeader() };
   const response = await axios.get(CAFE_API_URL + 'my-cafe', config);
   return response.data;
 };
+
+// Creates a new cafe (protected)
 const createCafe = async (cafeData) => {
   const config = { headers: getAuthHeader() };
   const response = await axios.post(CAFE_API_URL, cafeData, config);
   return response.data;
 };
+
+// Gets a single cafe's details by its ID (public)
 const getCafeById = (id) => {
   return axios.get(CAFE_API_URL + id);
 };
+
+// Updates a cafe's details (protected)
 const updateCafe = async (id, cafeData) => {
   const config = { headers: getAuthHeader() };
   const response = await axios.put(CAFE_API_URL + id, cafeData, config);
   return response.data;
 };
+
+// Deletes a cafe (protected)
 const deleteCafe = async (id) => {
   const config = { headers: getAuthHeader() };
   const response = await axios.delete(CAFE_API_URL + id, config);
   return response.data;
 };
-
-// --- Booking Functions ---
 
 // Fetches all bookings for a specific cafe (protected)
 const getOwnerBookings = async (cafeId) => {
@@ -64,6 +72,19 @@ const updateBookingStatus = async (bookingId, status) => {
   return response.data;
 };
 
+// --- UPDATED FUNCTION ---
+// Extends a booking's duration (protected)
+const extendBooking = async (bookingId, hoursToAdd) => {
+  const config = { headers: getAuthHeader() };
+  // FIX: Change from axios.put to axios.patch to match the backend route
+  const response = await axios.patch(
+    BOOKING_API_URL + bookingId + '/extend',
+    { hoursToAdd },
+    config
+  );
+  return response.data;
+};
+
 
 const cafeService = {
   getAllCafes,
@@ -74,6 +95,7 @@ const cafeService = {
   deleteCafe,
   getOwnerBookings,
   updateBookingStatus,
+  extendBooking,
 };
 
 export default cafeService;

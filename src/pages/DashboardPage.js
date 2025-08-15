@@ -1,25 +1,28 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import './DashboardPage.css';
 import cafeService from '../services/cafeService';
+
+// --- Material-UI Imports ---
+import {
+  AppBar, Toolbar, Typography, Button, Container, Box, Card, CardContent,
+  Grid, CircularProgress, Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Paper, Chip
+} from '@mui/material';
 
 const DashboardPage = () => {
   const [user, setUser] = useState(null);
   const [myCafe, setMyCafe] = useState(null);
-  // 1. Add state to store the list of bookings
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const navigate = useNavigate();
 
-  // 2. Update the fetch function to also get bookings
   const fetchCafeData = useCallback(async () => {
     setLoading(true);
     try {
       const cafe = await cafeService.getMyCafe();
       setMyCafe(cafe);
-      // If a cafe is found, fetch its bookings
       if (cafe) {
         const cafeBookings = await cafeService.getOwnerBookings(cafe._id);
         setBookings(cafeBookings);
@@ -47,22 +50,20 @@ const DashboardPage = () => {
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete your cafe? This action cannot be undone.')) {
+    if (window.confirm('Are you sure you want to delete your cafe?')) {
       try {
         await cafeService.deleteCafe(myCafe._id);
         setMyCafe(null);
-        setBookings([]); // Clear bookings from state as well
+        setBookings([]);
       } catch (err) {
-        setError('Failed to delete cafe. Please try again.');
+        setError('Failed to delete cafe.');
       }
     }
   };
 
-  // 3. Add the handler for updating booking status
   const handleStatusUpdate = async (bookingId, newStatus) => {
     try {
       await cafeService.updateBookingStatus(bookingId, newStatus);
-      // Update the booking list in our state to show the change immediately
       setBookings(bookings.map(b => 
         b._id === bookingId ? { ...b, status: newStatus } : b
       ));
@@ -71,90 +72,138 @@ const DashboardPage = () => {
     }
   };
 
+  const handleExtendBooking = async (bookingId) => {
+    const hoursToAdd = prompt("How many hours to add? (e.g., 0.5 for 30 mins)", "1");
+    if (hoursToAdd && !isNaN(hoursToAdd) && hoursToAdd > 0) {
+      try {
+        const updatedBooking = await cafeService.extendBooking(bookingId, parseFloat(hoursToAdd));
+        setBookings(bookings.map(b =>
+          b._id === bookingId ? updatedBooking : b
+        ));
+      } catch (err) {
+        setError('Failed to extend booking.');
+      }
+    }
+  };
+
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
-    <div>
-      <nav className="navbar">
-        <div className="navbar-brand">Owner Panel</div>
-        <button onClick={handleLogout} className="logout-button">
-          Logout
-        </button>
-      </nav>
-      <div className="dashboard-content">
-        <h1>Welcome, {user ? user.name : 'Owner'}!</h1>
+    <Box sx={{ flexGrow: 1, backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
+      <AppBar position="static" sx={{ backgroundColor: '#333' }}>
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+            Owner Panel
+          </Typography>
+          <Button color="inherit" onClick={handleLogout}>Logout</Button>
+        </Toolbar>
+      </AppBar>
+      
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Welcome, {user ? user.name : 'Owner'}!
+        </Typography>
         
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {error && <Typography color="error" align="center">{error}</Typography>}
 
         {myCafe ? (
-          <div>
-            <div className="cafe-details-card">
-              <h2>Your Cafe Details</h2>
-              <p><strong>Name:</strong> {myCafe.name}</p>
-              <p><strong>Address:</strong> {myCafe.address}</p>
-              <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-                <Link to={`/edit-cafe/${myCafe._id}`}><button className="button">Edit Details</button></Link>
-                <button onClick={handleDelete} className="logout-button">Delete Cafe</button>
-              </div>
-            </div>
+          <Grid container spacing={3}>
+            {/* Cafe Details Card (Left Column) */}
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h5" component="div" gutterBottom>
+                    Your Cafe Details
+                  </Typography>
+                  <Typography variant="body1"><strong>Name:</strong> {myCafe.name}</Typography>
+                  <Typography variant="body1"><strong>Address:</strong> {myCafe.address}</Typography>
+                  <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                    <Button variant="contained" component={Link} to={`/edit-cafe/${myCafe._id}`}>Edit Details</Button>
+                    <Button variant="outlined" color="error" onClick={handleDelete}>Delete Cafe</Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-            {/* 4. Add the bookings section */}
-            <div className="bookings-section">
-              <h2>Bookings Management</h2>
-              {bookings.length > 0 ? (
-                <table className="bookings-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Time</th>
-                      <th>System</th>
-                      <th>Duration</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bookings.map((booking) => (
-                      <tr key={booking._id}>
-                        <td>{new Date(booking.bookingDate).toLocaleDateString()}</td>
-                        <td>{booking.startTime}</td>
-                        <td>{booking.systemType}</td>
-                        <td>{booking.duration} hours</td>
-                        <td>{booking.status}</td>
-                        <td>
-                          <div className="action-buttons">
-                            {booking.status === 'Confirmed' && (
-                              <>
-                                <button onClick={() => handleStatusUpdate(booking._id, 'Completed')} className="button-complete">Complete</button>
-                                <button onClick={() => handleStatusUpdate(booking._id, 'Cancelled')} className="button-cancel">Cancel</button>
-                              </>
-                            )}
-                            {(booking.status === 'Cancelled' || booking.status === 'Completed') && (
-                               <button onClick={() => handleStatusUpdate(booking._id, 'Confirmed')} className="button-reconfirm">Re-confirm</button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p>You have no bookings yet.</p>
-              )}
-            </div>
-          </div>
+            {/* Bookings Card (Right Column) */}
+            <Grid item xs={12} md={8}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h5" component="div" gutterBottom>
+                    Bookings Management
+                  </Typography>
+                  {bookings.length > 0 ? (
+                    <TableContainer component={Paper}>
+                      <Table sx={{ minWidth: 650 }} aria-label="bookings table">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Date</TableCell>
+                            <TableCell>Time</TableCell>
+                            <TableCell>System</TableCell>
+                            <TableCell>Duration</TableCell>
+                            <TableCell>Total Price</TableCell>
+                            <TableCell>Status</TableCell>
+                            <TableCell align="center">Actions</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {bookings.map((booking) => (
+                            <TableRow key={booking._id}>
+                              <TableCell>{new Date(booking.bookingDate).toLocaleDateString()}</TableCell>
+                              <TableCell>{booking.startTime}</TableCell>
+                              <TableCell>{booking.systemType}</TableCell>
+                              <TableCell>{booking.duration} hours</TableCell>
+                              <TableCell>₹{booking.totalPrice}</TableCell>
+                              <TableCell>
+                                <Chip 
+                                  label={booking.status} 
+                                  color={booking.status === 'Confirmed' ? 'primary' : booking.status === 'Completed' ? 'success' : 'default'} 
+                                />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                                  {booking.status === 'Confirmed' && (
+                                    <>
+                                      <Button size="small" variant="contained" color="success" onClick={() => handleStatusUpdate(booking._id, 'Completed')}>Complete</Button>
+                                      <Button size="small" variant="contained" color="warning" onClick={() => handleStatusUpdate(booking._id, 'Cancelled')}>Cancel</Button>
+                                      <Button size="small" variant="contained" color="info" onClick={() => handleExtendBooking(booking._id)}>Extend</Button>
+                                    </>
+                                  )}
+                                  {(booking.status === 'Cancelled' || booking.status === 'Completed') && (
+                                     <Button size="small" variant="outlined" onClick={() => handleStatusUpdate(booking._id, 'Confirmed')}>Re-confirm</Button>
+                                  )}
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  ) : (
+                    <Typography>You have no bookings yet.</Typography>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
         ) : (
-          <div>
-            <p>You have not registered a cafe yet.</p>
-            <Link to="/create-cafe">
-              <button className="button">Create Your Cafe</button>
-            </Link>
-          </div>
+          <Card>
+            <CardContent sx={{ textAlign: 'center', p: 4 }}>
+              <Typography variant="h6">You have not registered a cafe yet.</Typography>
+              <Button variant="contained" size="large" component={Link} to="/create-cafe" sx={{ mt: 2 }}>
+                Create Your Cafe
+              </Button>
+            </CardContent>
+          </Card>
         )}
-      </div>
-    </div>
+      </Container>
+    </Box>
   );
 };
 
