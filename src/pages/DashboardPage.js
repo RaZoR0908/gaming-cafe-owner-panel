@@ -153,35 +153,49 @@ const DashboardPage = () => {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {bookings.map((booking) => (
-                            <TableRow key={booking._id}>
-                              <TableCell>{new Date(booking.bookingDate).toLocaleDateString()}</TableCell>
-                              <TableCell>{booking.startTime}</TableCell>
-                              <TableCell>{booking.systemType}</TableCell>
-                              <TableCell>{booking.duration} hours</TableCell>
-                              <TableCell>₹{booking.totalPrice}</TableCell>
-                              <TableCell>
-                                <Chip 
-                                  label={booking.status} 
-                                  color={booking.status === 'Confirmed' ? 'primary' : booking.status === 'Completed' ? 'success' : 'default'} 
-                                />
-                              </TableCell>
-                              <TableCell align="center">
-                                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                                  {booking.status === 'Confirmed' && (
-                                    <>
-                                      <Button size="small" variant="contained" color="success" onClick={() => handleStatusUpdate(booking._id, 'Completed')}>Complete</Button>
-                                      <Button size="small" variant="contained" color="warning" onClick={() => handleStatusUpdate(booking._id, 'Cancelled')}>Cancel</Button>
-                                      <Button size="small" variant="contained" color="info" onClick={() => handleExtendBooking(booking._id)}>Extend</Button>
-                                    </>
-                                  )}
-                                  {(booking.status === 'Cancelled' || booking.status === 'Completed') && (
-                                     <Button size="small" variant="outlined" onClick={() => handleStatusUpdate(booking._id, 'Confirmed')}>Re-confirm</Button>
-                                  )}
-                                </Box>
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                          {bookings.map((booking) => {
+                            // --- NEW LOGIC TO CHECK BOOKING DATE ---
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0); // Set to start of today for accurate date comparison
+                            const bookingDate = new Date(booking.bookingDate);
+                            bookingDate.setHours(0, 0, 0, 0);
+                            const isPastBooking = bookingDate < today;
+
+                            return (
+                              <TableRow key={booking._id}>
+                                <TableCell>{new Date(booking.bookingDate).toLocaleDateString()}</TableCell>
+                                <TableCell>{booking.startTime}</TableCell>
+                                <TableCell>{booking.systemType}</TableCell>
+                                <TableCell>{booking.duration} hours</TableCell>
+                                <TableCell>₹{booking.totalPrice}</TableCell>
+                                <TableCell>
+                                  <Chip 
+                                    label={booking.status} 
+                                    color={booking.status === 'Confirmed' ? 'primary' : booking.status === 'Completed' ? 'success' : 'default'} 
+                                  />
+                                </TableCell>
+                                <TableCell align="center">
+                                  <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                                    {booking.status === 'Confirmed' && (
+                                      <>
+                                        <Button size="small" variant="contained" color="success" onClick={() => handleStatusUpdate(booking._id, 'Completed')}>Complete</Button>
+                                        {/* Only show Cancel and Extend buttons for today's or future bookings */}
+                                        {!isPastBooking && (
+                                          <>
+                                            <Button size="small" variant="contained" color="warning" onClick={() => handleStatusUpdate(booking._id, 'Cancelled')}>Cancel</Button>
+                                            <Button size="small" variant="contained" color="info" onClick={() => handleExtendBooking(booking._id)}>Extend</Button>
+                                          </>
+                                        )}
+                                      </>
+                                    )}
+                                    {(booking.status === 'Cancelled' || booking.status === 'Completed') && (
+                                       <Button size="small" variant="outlined" onClick={() => handleStatusUpdate(booking._id, 'Confirmed')}>Re-confirm</Button>
+                                    )}
+                                  </Box>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
                         </TableBody>
                       </Table>
                     </TableContainer>

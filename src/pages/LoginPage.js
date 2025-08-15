@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import './LoginPage.css';
 import authService from '../services/authService';
+
+// --- Material-UI Imports ---
+import {
+  Container, Box, Typography, TextField, Button, Card, CardContent,
+  CircularProgress, Alert
+} from '@mui/material';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -18,23 +23,17 @@ const LoginPage = () => {
 
     try {
       const response = await authService.login(email, password);
-
       if (response.data.token) {
-        // --- IMPORTANT SECURITY CHECK ---
-        // 1. Check if the user's role is 'cafeOwner'.
         if (response.data.role === 'cafeOwner') {
-          // 2. If they are an owner, proceed as normal.
           localStorage.setItem('user', JSON.stringify(response.data));
           navigate('/dashboard');
         } else {
-          // 3. If they are a customer, block them and show an error.
           setError('Access denied. This panel is for cafe owners only.');
         }
       }
     } catch (err) {
       const errorMessage =
-        (err.response && err.response.data && err.response.data.message) ||
-        'Login failed. Please try again.';
+        (err.response?.data?.message) || 'Login failed. Please try again.';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -42,45 +41,66 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className="form-wrapper">
-        <h1 className="title">Cafe Owner Login</h1>
-        <form onSubmit={handleSubmit}>
-          {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-          <div className="input-group">
-            <label htmlFor="email" className="label">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input"
-              required
-            />
-          </div>
-          <div className="input-group">
-            <label htmlFor="password" className="label">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input"
-              required
-            />
-          </div>
-          <button type="submit" className="button" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-        <p className="register-text">
-          Don't have an account?{' '}
-          <Link to="/register" className="register-link">
-            Register here
-          </Link>
-        </p>
-      </div>
-    </div>
+    <Container component="main" maxWidth="xs">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Card sx={{ width: '100%', p: 2 }}>
+          <CardContent>
+            <Typography component="h1" variant="h5" align="center">
+              Cafe Owner Login
+            </Typography>
+            <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+              {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+                disabled={loading}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Login'}
+              </Button>
+              <Typography align="center">
+                Don't have an account?{' '}
+                <Link to="/register" style={{ textDecoration: 'none' }}>
+                  Register here
+                </Link>
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    </Container>
   );
 };
 
