@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const CAFE_API_URL = 'http://localhost:5000/api/cafes/';
 const BOOKING_API_URL = 'http://localhost:5000/api/bookings/';
+const REVIEW_API_URL = 'http://localhost:5000/api/reviews/';
 
 // Helper function to get the user's token from local storage
 const getAuthHeader = () => {
@@ -68,6 +69,12 @@ const createWalkInBooking = async (bookingData) => {
   );
   return response.data;
 };
+const getOwnerReviews = async () => {
+  const config = { headers: getAuthHeader() };
+  const response = await axios.get(REVIEW_API_URL + 'my-cafe/all', config);
+  return response.data;
+};
+
 
 
 const cafeService = {
@@ -81,6 +88,7 @@ const cafeService = {
   updateBookingStatus,
   extendBooking,
   createWalkInBooking,
+  getOwnerReviews,
 };
 
 export default cafeService;

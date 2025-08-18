@@ -6,12 +6,19 @@ import cafeService from '../services/cafeService';
 import {
   AppBar, Toolbar, Typography, Button, Container, Box, Card, CardContent,
   Grid, CircularProgress, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, Chip, Modal, TextField, MenuItem, Alert, IconButton
+  TableHead, TableRow, Paper, Chip, Modal, TextField, MenuItem, Alert, IconButton,
+  Rating, Divider, Avatar, Tabs, Tab, CardHeader, LinearProgress
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import StarIcon from '@mui/icons-material/Star';
+import PersonIcon from '@mui/icons-material/Person';
+import BusinessIcon from '@mui/icons-material/Business';
+import BookingsIcon from '@mui/icons-material/EventNote';
+import ReviewsIcon from '@mui/icons-material/RateReview';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 
 // Style for the modal popup
 const modalStyle = {
@@ -19,11 +26,13 @@ const modalStyle = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: { xs: '90%', sm: 500 },
+  width: { xs: '95%', sm: 600 },
   bgcolor: 'background.paper',
   boxShadow: 24,
   p: 4,
-  borderRadius: 2,
+  borderRadius: 3,
+  maxHeight: '90vh',
+  overflow: 'auto'
 };
 
 // Helper function to format duration
@@ -47,15 +56,33 @@ const timeToHour = (timeStr) => {
   return hour24;
 };
 
+// Tab panel component
+function TabPanel({ children, value, index, ...other }) {
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
 const DashboardPage = () => {
   const [user, setUser] = useState(null);
   const [myCafe, setMyCafe] = useState(null);
-  const [allBookings, setAllBookings] = useState([]); // Holds all bookings
+  const [allBookings, setAllBookings] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [tabValue, setTabValue] = useState(0); // NEW: Tab state
 
-  // --- NEW: State for filtering and sorting ---
+  // --- State for filtering and sorting ---
   const [filterDate, setFilterDate] = useState('');
 
   // --- State for the re-confirmation step ---
@@ -71,6 +98,22 @@ const DashboardPage = () => {
   });
 
   const navigate = useNavigate();
+
+  // Function to fetch reviews
+  const fetchReviews = useCallback(async () => {
+    if (!myCafe) return;
+    
+    setReviewsLoading(true);
+    try {
+      const reviewData = await cafeService.getOwnerReviews();
+      setReviews(reviewData);
+    } catch (err) {
+      console.error('Failed to fetch reviews:', err);
+      setError('Failed to fetch reviews.');
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, [myCafe]);
 
   const fetchCafeData = useCallback(async () => {
     try {
@@ -97,29 +140,53 @@ const DashboardPage = () => {
     }
   }, [fetchCafeData]);
 
-  // --- NEW: Memoized logic for filtering and sorting bookings ---
+  // Fetch reviews when cafe data is loaded
+  useEffect(() => {
+    if (myCafe) {
+      fetchReviews();
+    }
+  }, [myCafe, fetchReviews]);
+
+  // Memoized logic for filtering and sorting bookings
   const displayedBookings = useMemo(() => {
     let bookings = [...allBookings];
 
-    // Filter by date if a date is selected
     if (filterDate) {
       bookings = bookings.filter(b => b.bookingDate.startsWith(filterDate));
     }
 
-    // Sort the bookings sequentially
     bookings.sort((a, b) => {
       const dateA = new Date(a.bookingDate).getTime();
       const dateB = new Date(b.bookingDate).getTime();
       if (dateA !== dateB) {
-        return dateA - dateB; // Sort by date first
+        return dateA - dateB;
       }
-      // If dates are the same, sort by time
       return timeToHour(a.startTime) - timeToHour(b.startTime);
     });
 
     return bookings;
   }, [allBookings, filterDate]);
 
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayBookings = allBookings.filter(b => b.bookingDate.startsWith(today));
+    const confirmedBookings = allBookings.filter(b => b.status === 'Confirmed');
+    const totalRevenue = allBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+    const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : 0;
+    
+    return {
+      todayBookings: todayBookings.length,
+      confirmedBookings: confirmedBookings.length,
+      totalRevenue,
+      averageRating,
+      totalReviews: reviews.length
+    };
+  }, [allBookings, reviews]);
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -132,6 +199,7 @@ const DashboardPage = () => {
         await cafeService.deleteCafe(myCafe._id);
         setMyCafe(null);
         setAllBookings([]);
+        setReviews([]);
       } catch (err) {
         setError('Failed to delete cafe.');
       }
@@ -214,86 +282,230 @@ const DashboardPage = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <LinearProgress />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+          <CircularProgress size={60} />
+        </Box>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ flexGrow: 1, backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
-      <AppBar position="static" sx={{ backgroundColor: '#333' }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
-            Owner Panel
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#f8fafc' }}>
+      {/* Enhanced Header */}
+      <AppBar position="static" sx={{ 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+      }}>
+        <Toolbar sx={{ py: 1 }}>
+          <DashboardIcon sx={{ mr: 2 }} />
+          <Typography variant="h5" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+            {myCafe?.name || 'Owner Panel'}
           </Typography>
-          <Button color="inherit" onClick={handleLogout}>Logout</Button>
+          <Typography variant="body2" sx={{ mr: 3, opacity: 0.9 }}>
+            Welcome back, {user?.name}!
+          </Typography>
+          <Button 
+            color="inherit" 
+            variant="outlined"
+            onClick={handleLogout}
+            sx={{ borderColor: 'rgba(255,255,255,0.3)', '&:hover': { borderColor: 'white' } }}
+          >
+            Logout
+          </Button>
         </Toolbar>
       </AppBar>
       
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Welcome, {user ? user.name : 'Owner'}!
-        </Typography>
-        
+      {/* Main Content */}
+      <Container maxWidth="xl" sx={{ flex: 1, py: 3, overflow: 'hidden' }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
         {myCafe ? (
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h5" component="div" gutterBottom>
-                    Your Cafe Details
-                  </Typography>
-                  <Typography variant="body1"><strong>Name:</strong> {myCafe.name}</Typography>
-                  <Typography variant="body1"><strong>Address:</strong> {myCafe.address}</Typography>
-                  <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-                    <Button variant="contained" component={Link} to={`/edit-cafe/${myCafe._id}`}>Edit Details</Button>
-                    <Button variant="outlined" color="error" onClick={handleDelete}>Delete Cafe</Button>
-                  </Box>
-                </CardContent>
-              </Card>
+          <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {/* Stats Cards */}
+            <Grid container spacing={3} sx={{ mb: 3 }}>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+                  <CardContent sx={{ py: 2 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                      {stats.todayBookings}
+                    </Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>Today's Bookings</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
+                  <CardContent sx={{ py: 2 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                      {stats.confirmedBookings}
+                    </Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>Active Bookings</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card sx={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white' }}>
+                  <CardContent sx={{ py: 2 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                      ₹{stats.totalRevenue}
+                    </Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Revenue</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card sx={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', color: 'white' }}>
+                  <CardContent sx={{ py: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                        {stats.averageRating}
+                      </Typography>
+                      <StarIcon />
+                    </Box>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>Average Rating ({stats.totalReviews} reviews)</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
             </Grid>
 
-            <Grid item xs={12} md={8}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h5" component="div">
-                      Bookings Management
-                    </Typography>
-                    <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenModal}>
+            {/* Tabbed Content */}
+            <Paper sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth">
+                  <Tab 
+                    icon={<BusinessIcon />} 
+                    label="Cafe Details" 
+                    iconPosition="start"
+                    sx={{ minHeight: 64 }}
+                  />
+                  <Tab 
+                    icon={<BookingsIcon />} 
+                    label="Bookings Management" 
+                    iconPosition="start"
+                    sx={{ minHeight: 64 }}
+                  />
+                  <Tab 
+                    icon={<ReviewsIcon />} 
+                    label="Customer Reviews" 
+                    iconPosition="start"
+                    sx={{ minHeight: 64 }}
+                  />
+                </Tabs>
+              </Box>
+
+              {/* Cafe Details Tab */}
+              <TabPanel value={tabValue} index={0}>
+                <Box sx={{ height: 'calc(100vh - 300px)', overflow: 'auto', p: 3 }}>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                      <Card sx={{ height: 'fit-content' }}>
+                        <CardHeader 
+                          title="Cafe Information" 
+                          sx={{ pb: 1 }}
+                        />
+                        <CardContent>
+                          <Box sx={{ mb: 3 }}>
+                            <Typography variant="h6" gutterBottom>{myCafe.name}</Typography>
+                            <Typography variant="body1" color="text.secondary" gutterBottom>
+                              <strong>Address:</strong> {myCafe.address}
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary" gutterBottom>
+                              <strong>Contact:</strong> {myCafe.contactNumber || 'Not provided'}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Button 
+                              variant="contained" 
+                              component={Link} 
+                              to={`/edit-cafe/${myCafe._id}`}
+                              sx={{ minWidth: 120 }}
+                            >
+                              Edit Details
+                            </Button>
+                            <Button 
+                              variant="outlined" 
+                              color="error" 
+                              onClick={handleDelete}
+                              sx={{ minWidth: 120 }}
+                            >
+                              Delete Cafe
+                            </Button>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Card sx={{ height: 'fit-content' }}>
+                        <CardHeader 
+                          title="Rooms & Systems Overview" 
+                          sx={{ pb: 1 }}
+                        />
+                        <CardContent>
+                          {myCafe.rooms?.map((room, index) => (
+                            <Box key={index} sx={{ mb: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                                {room.roomType}
+                              </Typography>
+                              {room.systems?.map((system, sIndex) => (
+                                <Typography key={sIndex} variant="body2" color="text.secondary">
+                                  • {system.systemType}: {system.count} systems @ ₹{system.pricePerHour}/hr
+                                </Typography>
+                              ))}
+                            </Box>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </TabPanel>
+
+              {/* Bookings Management Tab */}
+              <TabPanel value={tabValue} index={1}>
+                <Box sx={{ height: 'calc(100vh - 300px)', overflow: 'auto', p: 3 }}>
+                  <Box sx={{ mb: 3, display: 'flex', justifyContent: 'between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <FilterListIcon color="action" />
+                      <TextField
+                        type="date"
+                        size="small"
+                        label="Filter by Date"
+                        value={filterDate}
+                        onChange={(e) => setFilterDate(e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                        sx={{ minWidth: 160 }}
+                      />
+                      <Button onClick={() => setFilterDate('')} variant="outlined">
+                        Clear Filter
+                      </Button>
+                    </Box>
+                    <Button 
+                      variant="contained" 
+                      startIcon={<AddIcon />} 
+                      onClick={handleOpenModal}
+                      size="large"
+                      sx={{ minWidth: 160 }}
+                    >
                       Add Walk-in
                     </Button>
                   </Box>
-                  
-                  {/* NEW: Date Filter */}
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-                    <FilterListIcon />
-                    <TextField
-                      type="date"
-                      size="small"
-                      value={filterDate}
-                      onChange={(e) => setFilterDate(e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                    <Button onClick={() => setFilterDate('')}>Clear Filter</Button>
-                  </Box>
 
-                  <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }} aria-label="bookings table">
+                  <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 400px)' }}>
+                    <Table stickyHeader>
                       <TableHead>
                         <TableRow>
-                          <TableCell>#</TableCell>
-                          <TableCell>Date</TableCell>
-                          <TableCell>Time</TableCell>
-                          <TableCell>System</TableCell>
-                          <TableCell>Duration</TableCell>
-                          <TableCell>Total Price</TableCell>
-                          <TableCell>Status</TableCell>
-                          <TableCell align="center">Actions</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>#</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Time</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Room</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>System</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Duration</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Price</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                          <TableCell align="center" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -310,21 +522,27 @@ const DashboardPage = () => {
                           const isReconfirmable = minutesSinceUpdate < 30;
 
                           return (
-                            <TableRow key={booking._id}>
+                            <TableRow key={booking._id} hover>
                               <TableCell>{index + 1}</TableCell>
                               <TableCell>{new Date(booking.bookingDate).toLocaleDateString()}</TableCell>
                               <TableCell>{booking.startTime}</TableCell>
+                              <TableCell>{booking.roomType || 'N/A'}</TableCell>
                               <TableCell>{booking.systemType}</TableCell>
-                              <TableCell>{booking.duration} hours</TableCell>
+                              <TableCell>{booking.duration} hr</TableCell>
                               <TableCell>₹{booking.totalPrice}</TableCell>
                               <TableCell>
                                 <Chip 
                                   label={booking.status} 
-                                  color={booking.status === 'Confirmed' ? 'primary' : booking.status === 'Completed' ? 'success' : 'default'} 
+                                  color={
+                                    booking.status === 'Confirmed' ? 'primary' : 
+                                    booking.status === 'Completed' ? 'success' : 
+                                    booking.status === 'Cancelled' ? 'error' : 'default'
+                                  }
+                                  size="small"
                                 />
                               </TableCell>
                               <TableCell align="center">
-                                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                                <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center', flexWrap: 'wrap' }}>
                                   {booking.status === 'Confirmed' && (
                                     <>
                                       <Button 
@@ -337,18 +555,44 @@ const DashboardPage = () => {
                                       >
                                         Cancel
                                       </Button>
-                                      <Button size="small" variant="contained" color="info" onClick={() => handleExtendBooking(booking._id)}>Extend</Button>
+                                      <Button 
+                                        size="small" 
+                                        variant="contained" 
+                                        color="info" 
+                                        onClick={() => handleExtendBooking(booking._id)}
+                                      >
+                                        Extend
+                                      </Button>
                                     </>
                                   )}
                                   {booking.status === 'Cancelled' && isReconfirmable && (
                                      <>
                                       {bookingToReconfirm === booking._id ? (
                                         <>
-                                          <Button size="small" variant="contained" color="success" onClick={() => handleStatusUpdate(booking._id, 'Confirmed')}>Confirm</Button>
-                                          <Button size="small" variant="outlined" onClick={() => setBookingToReconfirm(null)}>Back</Button>
+                                          <Button 
+                                            size="small" 
+                                            variant="contained" 
+                                            color="success" 
+                                            onClick={() => handleStatusUpdate(booking._id, 'Confirmed')}
+                                          >
+                                            Confirm
+                                          </Button>
+                                          <Button 
+                                            size="small" 
+                                            variant="outlined" 
+                                            onClick={() => setBookingToReconfirm(null)}
+                                          >
+                                            Back
+                                          </Button>
                                         </>
                                       ) : (
-                                        <Button size="small" variant="outlined" onClick={() => setBookingToReconfirm(booking._id)}>Re-confirm</Button>
+                                        <Button 
+                                          size="small" 
+                                          variant="outlined" 
+                                          onClick={() => setBookingToReconfirm(booking._id)}
+                                        >
+                                          Re-confirm
+                                        </Button>
                                       )}
                                      </>
                                   )}
@@ -360,58 +604,199 @@ const DashboardPage = () => {
                       </TableBody>
                     </Table>
                   </TableContainer>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+                </Box>
+              </TabPanel>
+
+              {/* Reviews Tab */}
+              <TabPanel value={tabValue} index={2}>
+                <Box sx={{ height: 'calc(100vh - 300px)', overflow: 'auto', p: 3 }}>
+                  {reviewsLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                      <CircularProgress />
+                    </Box>
+                  ) : reviews.length > 0 ? (
+                    <Grid container spacing={3}>
+                      {reviews.map((review, index) => (
+                        <Grid item xs={12} md={6} lg={4} key={review._id || index}>
+                          <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                            <CardContent sx={{ flex: 1 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                                <Avatar sx={{ bgcolor: 'primary.main' }}>
+                                  <PersonIcon />
+                                </Avatar>
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography variant="subtitle1" fontWeight="bold">
+                                    {review.customerName || review.customer?.name || 'Anonymous'}
+                                  </Typography>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Rating value={review.rating} readOnly size="small" />
+                                    <Typography variant="body2" color="text.secondary">
+                                      {review.rating}/5
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              </Box>
+                              {review.comment && (
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
+                                  "{review.comment}"
+                                </Typography>
+                              )}
+                              <Typography variant="caption" color="text.secondary">
+                                {new Date(review.createdAt || review.reviewDate).toLocaleDateString('en-IN', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </Typography>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  ) : (
+                    <Box sx={{ textAlign: 'center', py: 8 }}>
+                      <ReviewsIcon sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        No Reviews Yet
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Your customer reviews will appear here once customers start rating your cafe.
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              </TabPanel>
+            </Paper>
+          </Box>
         ) : (
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 4 }}>
-              <Typography variant="h6">You have not registered a cafe yet.</Typography>
-              <Button variant="contained" size="large" component={Link} to="/create-cafe" sx={{ mt: 2 }}>
-                Create Your Cafe
-              </Button>
-            </CardContent>
-          </Card>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+            <Card sx={{ maxWidth: 400, textAlign: 'center' }}>
+              <CardContent sx={{ p: 4 }}>
+                <BusinessIcon sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
+                <Typography variant="h5" gutterBottom>No Cafe Registered</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  You haven't registered your cafe yet. Create your cafe profile to start managing bookings and reviews.
+                </Typography>
+                <Button 
+                  variant="contained" 
+                  size="large" 
+                  component={Link} 
+                  to="/create-cafe"
+                  sx={{ minWidth: 200 }}
+                >
+                  Create Your Cafe
+                </Button>
+              </CardContent>
+            </Card>
+          </Box>
         )}
       </Container>
 
-      {/* --- Walk-in Booking Modal --- */}
+      {/* Enhanced Walk-in Booking Modal */}
       <Modal open={isModalOpen} onClose={handleCloseModal}>
         <Box sx={modalStyle} component="form" onSubmit={handleWalkInSubmit}>
-          <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+          <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 'bold' }}>
             Add Walk-in Booking
           </Typography>
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             <Grid item xs={12}>
-              <TextField select fullWidth label="Room" name="roomType" value={walkInData.roomType} onChange={handleWalkInChange} required>
+              <TextField 
+                select 
+                fullWidth 
+                label="Select Room" 
+                name="roomType" 
+                value={walkInData.roomType} 
+                onChange={handleWalkInChange} 
+                required
+              >
                 {myCafe?.rooms.map(room => (
-                  <MenuItem key={room.roomType} value={room.roomType}>{room.roomType}</MenuItem>
+                  <MenuItem key={room.roomType} value={room.roomType}>
+                    {room.roomType}
+                  </MenuItem>
                 ))}
               </TextField>
             </Grid>
             <Grid item xs={12}>
-              <TextField select fullWidth label="System" name="systemType" value={walkInData.systemType} onChange={handleWalkInChange} disabled={!walkInData.roomType} required>
+              <TextField 
+                select 
+                fullWidth 
+                label="Select System Type" 
+                name="systemType" 
+                value={walkInData.systemType} 
+                onChange={handleWalkInChange} 
+                disabled={!walkInData.roomType} 
+                required
+              >
                 {myCafe?.rooms.find(r => r.roomType === walkInData.roomType)?.systems.map(sys => (
-                  <MenuItem key={sys.systemType} value={sys.systemType}>{sys.systemType}</MenuItem>
+                  <MenuItem key={sys.systemType} value={sys.systemType}>
+                    {sys.systemType} - ₹{sys.pricePerHour}/hr
+                  </MenuItem>
                 ))}
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="No. of Systems" name="numberOfSystems" type="number" defaultValue={1} onChange={handleWalkInChange} required InputProps={{ inputProps: { min: 1 } }}/>
+              <TextField 
+                fullWidth 
+                label="Number of Systems" 
+                name="numberOfSystems" 
+                type="number" 
+                value={walkInData.numberOfSystems}
+                onChange={handleWalkInChange} 
+                required 
+                InputProps={{ inputProps: { min: 1, max: 10 } }}
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <Typography variant="subtitle1" component="label" sx={{ color: 'text.secondary', mb: 1 }}>Duration</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid #ccc', borderRadius: 1, p: 0.5 }}>
-                <IconButton onClick={() => handleDurationChange(-0.5)}><RemoveCircleOutlineIcon /></IconButton>
-                <Typography variant="h6">{formatDuration(walkInData.duration)}</Typography>
-                <IconButton onClick={() => handleDurationChange(0.5)}><AddCircleOutlineIcon /></IconButton>
+              <Typography variant="subtitle1" component="label" sx={{ color: 'text.primary', mb: 2, display: 'block' }}>
+                Duration
+              </Typography>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                border: '1px solid #e0e0e0', 
+                borderRadius: 2, 
+                p: 1,
+                bgcolor: 'grey.50'
+              }}>
+                <IconButton 
+                  onClick={() => handleDurationChange(-0.5)}
+                  disabled={walkInData.duration <= 0.5}
+                  color="primary"
+                >
+                  <RemoveCircleOutlineIcon />
+                </IconButton>
+                <Typography variant="h6" sx={{ minWidth: 80, textAlign: 'center', fontWeight: 'bold' }}>
+                  {formatDuration(walkInData.duration)}
+                </Typography>
+                <IconButton 
+                  onClick={() => handleDurationChange(0.5)}
+                  color="primary"
+                >
+                  <AddCircleOutlineIcon />
+                </IconButton>
               </Box>
             </Grid>
           </Grid>
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-            <Button onClick={handleCloseModal} sx={{ mr: 1 }}>Cancel</Button>
-            <Button type="submit" variant="contained">Add Booking</Button>
+          <Divider sx={{ my: 3 }} />
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" color="primary">
+              Estimated Total: ₹{(() => {
+                if (!walkInData.roomType || !walkInData.systemType) return '0';
+                const room = myCafe?.rooms.find(r => r.roomType === walkInData.roomType);
+                const system = room?.systems.find(s => s.systemType === walkInData.systemType);
+                const price = system ? system.pricePerHour * walkInData.numberOfSystems * walkInData.duration : 0;
+                return price.toFixed(0);
+              })()}
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button onClick={handleCloseModal} variant="outlined" size="large">
+                Cancel
+              </Button>
+              <Button type="submit" variant="contained" size="large" sx={{ minWidth: 120 }}>
+                Add Booking
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Modal>
