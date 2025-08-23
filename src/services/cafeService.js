@@ -121,6 +121,16 @@ const autoCompleteExpiredSessions = async () => {
   return response.data;
 };
 
+const updateSystemMaintenanceStatus = async (cafeId, roomName, systemId, status) => {
+  const config = { headers: getAuthHeader() };
+  const response = await axios.patch(
+    BOOKING_API_URL + 'system-maintenance',
+    { cafeId, roomName, systemId, status },
+    config
+  );
+  return response.data;
+};
+
 const cafeService = {
   getAllCafes,
   getMyCafe,
@@ -137,6 +147,7 @@ const cafeService = {
   endSession,
   getAvailableSystemsForAssignment,
   autoCompleteExpiredSessions,
+  updateSystemMaintenanceStatus,
 };
 
 export default cafeService;

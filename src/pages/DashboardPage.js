@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import cafeService from '../services/cafeService';
 import WalkInBookingModal from '../components/WalkInBookingModal';
 import SystemManagementModal from '../components/SystemManagementModal';
+import ExtendSessionModal from '../components/ExtendSessionModal';
 
 // --- Material-UI Imports ---
 import {
@@ -75,6 +76,8 @@ const DashboardPage = () => {
   const [isSystemManagementModalOpen, setSystemManagementModalOpen] = useState(false);
   const [systemManagementMode, setSystemManagementMode] = useState('management'); // 'management' or 'assignment'
   const [selectedBookingForAssignment, setSelectedBookingForAssignment] = useState(null);
+  const [isExtendModalOpen, setExtendModalOpen] = useState(false);
+  const [selectedBookingForExtend, setSelectedBookingForExtend] = useState(null);
 
   const navigate = useNavigate();
 
@@ -101,7 +104,14 @@ const DashboardPage = () => {
       setMyCafe(cafe);
       if (cafe) {
         const cafeBookings = await cafeService.getOwnerBookings(cafe._id);
-        setAllBookings(cafeBookings);
+        // Filter out any invalid booking objects
+        const validBookings = (cafeBookings || []).filter(booking => 
+          booking && 
+          typeof booking === 'object' && 
+          booking.bookingDate && 
+          booking.status
+        );
+        setAllBookings(validBookings);
       }
     } catch (err) {
       setError('Failed to fetch data. Please try again.');
@@ -130,10 +140,10 @@ const DashboardPage = () => {
 
   // Memoized logic for filtering and sorting bookings
   const displayedBookings = useMemo(() => {
-    let bookings = [...allBookings];
+    let bookings = [...allBookings].filter(b => b && b.bookingDate); // Filter out invalid bookings
 
     if (filterDate) {
-      bookings = bookings.filter(b => b.bookingDate.startsWith(filterDate));
+      bookings = bookings.filter(b => b.bookingDate && b.bookingDate.startsWith(filterDate));
     }
 
     bookings.sort((a, b) => {
@@ -142,7 +152,7 @@ const DashboardPage = () => {
       if (dateA !== dateB) {
         return dateA - dateB;
       }
-      return timeToHour(a.startTime) - timeToHour(b.startTime);
+      return timeToHour(a.startTime || '00:00') - timeToHour(b.startTime || '00:00');
     });
 
     return bookings;
@@ -151,9 +161,10 @@ const DashboardPage = () => {
   // Calculate statistics
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
-    const todayBookings = allBookings.filter(b => b.bookingDate.startsWith(today));
-    const activeBookings = allBookings.filter(b => ['Booked', 'Confirmed', 'Active'].includes(b.status));
-    const totalRevenue = allBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+    const validBookings = allBookings.filter(b => b && b.bookingDate && b.status); // Filter out invalid bookings
+    const todayBookings = validBookings.filter(b => b.bookingDate.startsWith(today));
+    const activeBookings = validBookings.filter(b => ['Booked', 'Confirmed', 'Active'].includes(b.status));
+    const totalRevenue = validBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
     const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : 0;
     
     return {
@@ -190,35 +201,55 @@ const DashboardPage = () => {
   };
 
   const handleStatusUpdate = async (bookingId, newStatus) => {
-    if (newStatus === 'Cancelled') {
-      if (!window.confirm('Are you sure you want to cancel this booking?')) {
-        return;
-      }
-    }
     try {
       const updatedBooking = await cafeService.updateBookingStatus(bookingId, newStatus);
-      setAllBookings(allBookings.map(b => 
-        b._id === bookingId ? updatedBooking : b
-      ));
+      
+      // Validate the updated booking before adding to state
+      if (updatedBooking && updatedBooking.bookingDate && updatedBooking.status) {
+        setAllBookings(allBookings.map(b => 
+          b._id === bookingId ? updatedBooking : b
+        ));
+        setSuccess(`Booking ${newStatus.toLowerCase()} successfully.`);
+      } else {
+        console.warn('Received invalid booking data:', updatedBooking);
+        // Force refresh to get clean data
+        await fetchCafeData();
+      }
+      
       setBookingToReconfirm(null);
-      setSuccess(`Booking ${newStatus.toLowerCase()} successfully.`);
     } catch (err) {
       setError('Failed to update booking status.');
     }
   };
 
-  const handleExtendBooking = async (bookingId) => {
-    const hoursToAdd = prompt("How many hours to add? (e.g., 0.5 for 30 mins)", "1");
-    if (hoursToAdd && !isNaN(hoursToAdd) && hoursToAdd > 0) {
-      try {
-        const updatedBooking = await cafeService.extendBooking(bookingId, parseFloat(hoursToAdd));
-        setAllBookings(allBookings.map(b =>
-          b._id === bookingId ? updatedBooking : b
-        ));
-        setSuccess('Booking extended successfully.');
-      } catch (err) {
-        setError('Failed to extend booking.');
-      }
+  const handleCancelBooking = async (bookingId, customerName) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to cancel the booking for ${customerName}?\n\nThis action cannot be undone.`
+    );
+    
+    if (confirmed) {
+      await handleStatusUpdate(bookingId, 'Cancelled');
+    }
+  };
+
+  const handleExtendBooking = (booking) => {
+    setSelectedBookingForExtend(booking);
+    setExtendModalOpen(true);
+  };
+
+  const handleExtendSubmit = async (bookingId, selectedSystemIds, extensionHours) => {
+    try {
+      // For now, we'll extend the entire booking duration
+      // In a more advanced implementation, you could extend individual systems
+      const updatedBooking = await cafeService.extendBooking(bookingId, extensionHours);
+      setAllBookings(allBookings.map(b =>
+        b._id === bookingId ? updatedBooking : b
+      ));
+      setSuccess(`Extended ${selectedSystemIds.length} system(s) by ${extensionHours} hours.`);
+      setExtendModalOpen(false);
+      setSelectedBookingForExtend(null);
+    } catch (err) {
+      throw err; // Let the modal handle the error
     }
   };
 
@@ -530,18 +561,141 @@ const DashboardPage = () => {
                   </Box>
 
                   {/* Simple Table */}
-                  <TableContainer component={Paper} sx={{ maxHeight: 500 }}>
-                    <Table stickyHeader>
+                  <TableContainer 
+                    component={Paper} 
+                    sx={{ 
+                      maxHeight: 500, 
+                      overflow: 'auto',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: 2,
+                      '& .MuiTableHead-root': {
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 10
+                      }
+                    }}
+                  >
+                    <Table stickyHeader size="small" sx={{ tableLayout: 'auto' }}>
                       <TableHead>
                         <TableRow>
-                          <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>#</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>Customer</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>Date & Time</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>Room/System</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>Duration</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>Price</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>Status</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', textAlign: 'center' }}>Actions</TableCell>
+                          <TableCell 
+                            sx={{ 
+                              fontWeight: 'bold', 
+                              bgcolor: 'primary.main', 
+                              color: 'white',
+                              width: '5%',
+                              position: 'sticky',
+                              top: 0,
+                              zIndex: 11
+                            }}
+                          >
+                            #
+                          </TableCell>
+                          <TableCell 
+                            sx={{ 
+                              fontWeight: 'bold', 
+                              bgcolor: 'primary.main', 
+                              color: 'white',
+                              width: '15%',
+                              position: 'sticky',
+                              top: 0,
+                              zIndex: 11
+                            }}
+                          >
+                            Customer
+                          </TableCell>
+                          <TableCell 
+                            sx={{ 
+                              fontWeight: 'bold', 
+                              bgcolor: 'primary.main', 
+                              color: 'white',
+                              width: '12%',
+                              position: 'sticky',
+                              top: 0,
+                              zIndex: 11
+                            }}
+                          >
+                            Date & Time
+                          </TableCell>
+                          <TableCell 
+                            sx={{ 
+                              fontWeight: 'bold', 
+                              bgcolor: 'primary.main', 
+                              color: 'white',
+                              width: '15%',
+                              position: 'sticky',
+                              top: 0,
+                              zIndex: 11
+                            }}
+                          >
+                            Room/System
+                          </TableCell>
+                          <TableCell 
+                            sx={{ 
+                              fontWeight: 'bold', 
+                              bgcolor: 'primary.main', 
+                              color: 'white',
+                              width: '15%',
+                              position: 'sticky',
+                              top: 0,
+                              zIndex: 11
+                            }}
+                          >
+                            Systems
+                          </TableCell>
+                          <TableCell 
+                            sx={{ 
+                              fontWeight: 'bold', 
+                              bgcolor: 'primary.main', 
+                              color: 'white',
+                              width: '8%',
+                              position: 'sticky',
+                              top: 0,
+                              zIndex: 11
+                            }}
+                          >
+                            Duration
+                          </TableCell>
+                          <TableCell 
+                            sx={{ 
+                              fontWeight: 'bold', 
+                              bgcolor: 'primary.main', 
+                              color: 'white',
+                              width: '10%',
+                              position: 'sticky',
+                              top: 0,
+                              zIndex: 11
+                            }}
+                          >
+                            Price
+                          </TableCell>
+                          <TableCell 
+                            sx={{ 
+                              fontWeight: 'bold', 
+                              bgcolor: 'primary.main', 
+                              color: 'white',
+                              width: '10%',
+                              position: 'sticky',
+                              top: 0,
+                              zIndex: 11
+                            }}
+                          >
+                            Status
+                          </TableCell>
+                          <TableCell 
+                            sx={{ 
+                              fontWeight: 'bold', 
+                              bgcolor: 'primary.main', 
+                              color: 'white',
+                              textAlign: 'center',
+                              width: '10%',
+                              position: 'sticky',
+                              top: 0,
+                              zIndex: 11
+                            }}
+                          >
+                            Actions
+                          </TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -553,48 +707,131 @@ const DashboardPage = () => {
                           
                           const hoursUntilBooking = (bookingDateTime - now) / (1000 * 60 * 60);
                           const isWalkIn = !booking.customer && booking.walkInCustomerName;
-                          const isCancellable = isWalkIn || hoursUntilBooking > 1;
+                          // Owner can always cancel their own bookings (both walk-in and scheduled)
+                          const isCancellable = true; // Owner has full control over cancellations
 
                           const minutesSinceUpdate = (now - new Date(booking.updatedAt)) / (1000 * 60);
                           const isReconfirmable = minutesSinceUpdate < 30;
 
                           return (
                             <TableRow key={booking._id} hover>
-                              <TableCell>{index + 1}</TableCell>
-                              <TableCell sx={{ fontWeight: 'medium' }}>
-                                {booking.customer ? booking.customer.name : (booking.walkInCustomerName || 'Walk-in')}
+                              <TableCell sx={{ textAlign: 'center', fontWeight: 'bold', color: 'primary.main' }}>
+                                {index + 1}
                               </TableCell>
                               <TableCell>
                                 <Box>
-                                  <Typography variant="body2" fontWeight="medium">
-                                    {new Date(booking.bookingDate).toLocaleDateString()}
+                                  <Typography variant="body2" fontWeight="bold">
+                                    {booking.customer ? booking.customer.name : (booking.walkInCustomerName || 'Walk-in Customer')}
                                   </Typography>
-                                  <Typography variant="body2" color="text.secondary">
+                                  <Typography variant="caption" color="text.secondary">
+                                    {booking.customer ? 'Registered' : 'Walk-in'}
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell>
+                                <Box>
+                                  <Typography variant="body2" fontWeight="bold">
+                                    {new Date(booking.bookingDate).toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric'
+                                    })}
+                                  </Typography>
+                                  <Typography variant="caption" color="primary.main" fontWeight="medium">
                                     {booking.startTime}
                                   </Typography>
                                 </Box>
                               </TableCell>
                               <TableCell>
                                 <Box>
-                                  <Typography variant="body2">{booking.roomType || 'N/A'}</Typography>
+                                  {/* Handle both old and new booking formats */}
+                                  {booking.systemsBooked && booking.systemsBooked.length > 0 ? (
+                                    // New format with multiple systems
+                                    booking.systemsBooked.map((system, index) => (
+                                      <Box key={index} sx={{ mb: index < booking.systemsBooked.length - 1 ? 0.5 : 0 }}>
+                                        <Typography variant="body2" fontWeight="bold" color="success.main">
+                                          {system.roomType}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                          {system.systemType} × {system.numberOfSystems}
+                                        </Typography>
+                                      </Box>
+                                    ))
+                                  ) : (
+                                    // Old format fallback
+                                    <Box>
+                                      <Typography variant="body2" fontWeight="bold" color="success.main">
+                                        {booking.roomType || 'N/A'}
+                                      </Typography>
+                                      <Typography variant="caption" color="text.secondary">
+                                        {booking.systemType} × {booking.numberOfSystems || 1}
+                                      </Typography>
+                                    </Box>
+                                  )}
+                                </Box>
+                              </TableCell>
+                              <TableCell>
+                                {/* Assigned Systems Column */}
+                                {booking.assignedSystems && booking.assignedSystems.length > 0 ? (
+                                  <Box>
+                                    {booking.assignedSystems.map((system, index) => (
+                                      <Chip
+                                        key={index}
+                                        label={system.systemId}
+                                        size="small"
+                                        variant="outlined"
+                                        color={booking.status === 'Active' ? 'success' : 'default'}
+                                        sx={{ 
+                                          mr: 0.5, 
+                                          mb: 0.5,
+                                          fontSize: '0.75rem',
+                                          fontFamily: 'monospace'
+                                        }}
+                                      />
+                                    ))}
+                                    <Typography variant="caption" color="text.secondary" display="block">
+                                      {booking.assignedSystems.length} system(s)
+                                    </Typography>
+                                  </Box>
+                                ) : (
                                   <Typography variant="body2" color="text.secondary">
-                                    {booking.systemType} ({booking.numberOfSystems || 1})
+                                    {booking.status === 'Booked' ? 'Pending Assignment' : '-'}
+                                  </Typography>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <AccessTimeIcon fontSize="small" color="primary" />
+                                  <Chip
+                                    label={formatDuration(booking.duration)}
+                                    size="small"
+                                    variant="outlined"
+                                    color="primary"
+                                    sx={{ fontWeight: 'bold' }}
+                                  />
+                                </Box>
+                              </TableCell>
+                              <TableCell>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Typography 
+                                    variant="h6" 
+                                    fontWeight="bold" 
+                                    color="success.main"
+                                    sx={{ fontFamily: 'monospace' }}
+                                  >
+                                    ₹{booking.totalPrice?.toLocaleString() || '0'}
                                   </Typography>
                                 </Box>
                               </TableCell>
                               <TableCell>
-                                <Typography variant="body2" fontWeight="medium">
-                                  {formatDuration(booking.duration)}
-                                </Typography>
-                              </TableCell>
-                              <TableCell>
-                                <Typography variant="body2" fontWeight="bold" color="success.main">
-                                  ₹{booking.totalPrice}
-                                </Typography>
-                              </TableCell>
-                              <TableCell>
                                 <Chip 
-                                  label={booking.status} 
+                                  label={booking.status}
+                                  icon={
+                                    booking.status === 'Booked' ? <BookingsIcon fontSize="small" /> :
+                                    booking.status === 'Confirmed' ? <BookingsIcon fontSize="small" /> : 
+                                    booking.status === 'Active' ? <PlayArrowIcon fontSize="small" /> :
+                                    booking.status === 'Completed' ? <StarIcon fontSize="small" /> : 
+                                    booking.status === 'Cancelled' ? <DeleteIcon fontSize="small" /> : null
+                                  }
                                   color={
                                     booking.status === 'Booked' ? 'info' :
                                     booking.status === 'Confirmed' ? 'primary' : 
@@ -603,20 +840,36 @@ const DashboardPage = () => {
                                     booking.status === 'Cancelled' ? 'error' : 'default'
                                   }
                                   size="small"
+                                  sx={{ 
+                                    fontWeight: 'bold',
+                                    '& .MuiChip-icon': {
+                                      fontSize: '16px'
+                                    }
+                                  }}
                                 />
                               </TableCell>
                               <TableCell align="center">
-                                <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap">
+                                <Stack direction="column" spacing={0.5} alignItems="center">
                                   {booking.status === 'Booked' && (
-                                    <Button 
-                                      size="small" 
-                                      variant="contained" 
-                                      color="primary"
-                                      onClick={() => handleStartSession(booking)}
-                                      startIcon={<PlayArrowIcon />}
-                                    >
-                                      Start Session
-                                    </Button>
+                                    <>
+                                      <Button 
+                                        size="small" 
+                                        variant="contained" 
+                                        color="primary"
+                                        onClick={() => handleStartSession(booking)}
+                                        sx={{ mb: 0.5 }}
+                                      >
+                                        Start
+                                      </Button>
+                                      <Button 
+                                        size="small" 
+                                        variant="outlined" 
+                                        color="error" 
+                                        onClick={() => handleCancelBooking(booking._id, booking.customer?.name || booking.walkInCustomerName || 'Walk-in Customer')}
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </>
                                   )}
                                   
                                   {booking.status === 'Confirmed' && (
@@ -624,20 +877,19 @@ const DashboardPage = () => {
                                       <Button 
                                         size="small" 
                                         variant="outlined" 
-                                        color="warning" 
-                                        onClick={() => handleStatusUpdate(booking._id, 'Cancelled')}
-                                        disabled={!isCancellable}
-                                        title={!isCancellable ? "Cannot cancel within 1 hour" : ""}
+                                        color="info" 
+                                        onClick={() => handleExtendBooking(booking)}
+                                        sx={{ mb: 0.5 }}
                                       >
-                                        Cancel
+                                        Extend
                                       </Button>
                                       <Button 
                                         size="small" 
                                         variant="outlined" 
-                                        color="info" 
-                                        onClick={() => handleExtendBooking(booking._id)}
+                                        color="error" 
+                                        onClick={() => handleCancelBooking(booking._id, booking.customer?.name || booking.walkInCustomerName || 'Walk-in Customer')}
                                       >
-                                        Extend
+                                        Cancel
                                       </Button>
                                     </>
                                   )}
@@ -648,15 +900,19 @@ const DashboardPage = () => {
                                         size="small" 
                                         variant="outlined" 
                                         color="info" 
-                                        onClick={() => handleExtendBooking(booking._id)}
+                                        onClick={() => handleExtendBooking(booking)}
+                                        sx={{ mb: 0.5 }}
                                       >
                                         Extend
                                       </Button>
-                                      {booking.assignedSystems && booking.assignedSystems.length > 0 && (
-                                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                                          Systems: {booking.assignedSystems.map(s => s.systemId).join(', ')}
-                                        </Typography>
-                                      )}
+                                      <Button 
+                                        size="small" 
+                                        variant="outlined" 
+                                        color="error" 
+                                        onClick={() => handleCancelBooking(booking._id, booking.customer?.name || booking.walkInCustomerName || 'Walk-in Customer')}
+                                      >
+                                        Cancel
+                                      </Button>
                                     </>
                                   )}
                                   
@@ -698,7 +954,7 @@ const DashboardPage = () => {
                         })}
                         {displayedBookings.length === 0 && (
                           <TableRow>
-                            <TableCell colSpan={8} sx={{ textAlign: 'center', py: 6 }}>
+                            <TableCell colSpan={9} sx={{ textAlign: 'center', py: 6 }}>
                               <BookingsIcon sx={{ fontSize: 48, color: 'grey.400', mb: 2 }} />
                               <Typography variant="h6" color="text.secondary" gutterBottom>
                                 {filterDate ? 'No bookings found for selected date' : 'No bookings yet'}
@@ -889,8 +1145,18 @@ const DashboardPage = () => {
         booking={selectedBookingForAssignment}
         onSystemsAssigned={handleSystemsAssigned}
       />
+
+      {/* Extend Session Modal */}
+      <ExtendSessionModal
+        open={isExtendModalOpen}
+        onClose={() => {
+          setExtendModalOpen(false);
+          setSelectedBookingForExtend(null);
+        }}
+        booking={selectedBookingForExtend}
+        onExtend={handleExtendSubmit}
+      />
     </Box>
   );
 };
-
 export default DashboardPage;

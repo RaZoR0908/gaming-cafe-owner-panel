@@ -29,23 +29,63 @@ const modalStyle = {
 };
 
 // Helper function to calculate remaining time
-const calculateRemainingTime = (sessionEndTime) => {
-  if (!sessionEndTime) return null;
-  
+const calculateRemainingTime = (sessionEndTime, sessionStartTime, duration, _timerTick) => {
   const now = new Date();
-  const endTime = new Date(sessionEndTime);
-  const remainingMs = endTime.getTime() - now.getTime();
   
-  if (remainingMs <= 0) return { expired: true, text: 'Expired' };
+  // Primary: Use sessionStartTime + duration (most reliable)
+  if (sessionStartTime && duration) {
+    const startTime = new Date(sessionStartTime);
+    const endTime = new Date(startTime.getTime() + (duration * 60 * 60 * 1000));
+    const remainingMs = endTime.getTime() - now.getTime();
+    const totalSessionMs = duration * 60 * 60 * 1000;
+    
+    if (remainingMs <= 0) return { expired: true, text: 'Expired', percentage: 0 };
+    
+    const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+    const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+    
+    let timeText = '';
+    if (hours > 0) timeText += `${hours}h `;
+    if (minutes > 0) timeText += `${minutes}m `;
+    if (hours === 0 && minutes < 5) timeText += `${seconds}s`;
+    
+    const percentage = Math.max(0, Math.min(100, (remainingMs / totalSessionMs) * 100));
+    
+    return {
+      expired: false,
+      text: timeText.trim(),
+      percentage
+    };
+  }
   
-  const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-  const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+  // Fallback: Use sessionEndTime if available
+  if (sessionEndTime) {
+    const endTime = new Date(sessionEndTime);
+    const remainingMs = endTime.getTime() - now.getTime();
+    const totalSessionMs = duration * 60 * 60 * 1000; // Total duration in milliseconds
+    
+    if (remainingMs <= 0) return { expired: true, text: 'Expired', percentage: 0 };
+    
+    const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+    const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+    
+    let timeText = '';
+    if (hours > 0) timeText += `${hours}h `;
+    if (minutes > 0) timeText += `${minutes}m `;
+    if (hours === 0 && minutes < 5) timeText += `${seconds}s`; // Show seconds only for last 5 minutes
+    
+    const percentage = Math.max(0, Math.min(100, (remainingMs / totalSessionMs) * 100));
+    
+    return {
+      expired: false,
+      text: timeText.trim(),
+      percentage
+    };
+  }
   
-  return {
-    expired: false,
-    text: `${hours}h ${minutes}m`,
-    percentage: Math.max(0, (remainingMs / (1000 * 60 * 60 * 2)) * 100) // Assuming 2hr max for demo
-  };
+  return null; // No timing data available
 };
 
 // Helper function to format duration
@@ -84,6 +124,27 @@ const SystemManagementModal = ({
       
       // Then fetch current cafe status
       const cafe = await cafeService.getMyCafe();
+      
+      // Also fetch current bookings to get session timing details
+      const bookings = await cafeService.getOwnerBookings(cafe._id);
+      
+      // Map active bookings to systems for timer display
+      cafe.rooms.forEach(room => {
+        room.systems.forEach(system => {
+          if (system.status === 'Active' && system.activeBooking) {
+            const activeBooking = bookings.find(b => b._id === system.activeBooking);
+            if (activeBooking) {
+              // Use the actual stored session timing data from the booking
+              system.sessionStartTime = activeBooking.sessionStartTime;
+              system.sessionEndTime = activeBooking.sessionEndTime;
+              system.sessionDuration = activeBooking.duration;
+              
+              // Timer data is now properly mapped from backend-stored values
+            }
+          }
+        });
+      });
+      
       setSystemStatus(cafe);
     } catch (err) {
       console.error('Failed to fetch system status:', err);
@@ -93,6 +154,9 @@ const SystemManagementModal = ({
     }
   }, [myCafe?._id]);
 
+  // State to force timer re-renders
+  const [timerTick, setTimerTick] = useState(0);
+
   // Initialize on open
   useEffect(() => {
     if (open) {
@@ -101,9 +165,26 @@ const SystemManagementModal = ({
       setSuccess('');
       fetchSystemStatus();
       
-      // Set up auto-refresh every 30 seconds
-      const interval = setInterval(fetchSystemStatus, 30000);
-      return () => clearInterval(interval);
+      // Set up auto-refresh every 30 seconds for full data
+      const refreshInterval = setInterval(fetchSystemStatus, 30000);
+      
+      // Set up timer update every second for live countdown
+      const timerInterval = setInterval(async () => {
+        // Increment timer tick to force re-calculation of timers
+        setTimerTick(prev => prev + 1);
+        
+        // Auto-complete expired sessions
+        try {
+          await cafeService.autoCompleteExpiredSessions();
+        } catch (err) {
+          console.error('Failed to auto-complete expired sessions:', err);
+        }
+      }, 1000);
+      
+      return () => {
+        clearInterval(refreshInterval);
+        clearInterval(timerInterval);
+      };
     }
   }, [open, fetchSystemStatus]);
 
@@ -119,6 +200,30 @@ const SystemManagementModal = ({
       }
     }));
   };
+
+  // Validate if correct number of systems are selected
+  const isValidSelection = useCallback(() => {
+    if (!booking || mode !== 'assignment') return false;
+    
+    if (booking.systemsBooked) {
+      // New format: validate each system type separately
+      for (const bookedSystem of booking.systemsBooked) {
+        const selectedCount = Object.values(selectedSystems[bookedSystem.roomType] || {})
+          .filter(Boolean).length;
+        
+        if (selectedCount !== bookedSystem.numberOfSystems) {
+          return false;
+        }
+      }
+      return true;
+    } else {
+      // Old format: total count validation
+      const totalSelected = Object.values(selectedSystems).reduce((total, room) => 
+        total + Object.values(room || {}).filter(Boolean).length, 0);
+      
+      return totalSelected === (booking.numberOfSystems || 1);
+    }
+  }, [selectedSystems, booking, mode]);
 
   // Start session (assignment mode)
   const handleStartSession = async () => {
@@ -146,15 +251,41 @@ const SystemManagementModal = ({
         return;
       }
       
-      // Validate that we have the right number of systems
-      const totalSelected = systemAssignments.reduce((total, assignment) => 
-        total + assignment.systemIds.length, 0);
+      // Validate that we have the right number of systems for each room/system type
+      let validationError = null;
       
-      const totalRequired = booking.systemsBooked?.reduce((total, system) => 
-        total + system.numberOfSystems, 0) || booking.numberOfSystems || 1;
+      if (booking.systemsBooked) {
+        // New format: validate each system type separately
+        for (const bookedSystem of booking.systemsBooked) {
+          const assignment = systemAssignments.find(a => a.roomType === bookedSystem.roomType);
+          if (!assignment) {
+            validationError = `Please select systems for ${bookedSystem.roomType}`;
+            break;
+          }
+          
+          // Count selected systems of this type in this room
+          const selectedCount = assignment.systemIds.length;
+          const requiredCount = bookedSystem.numberOfSystems;
+          
+          if (selectedCount !== requiredCount) {
+            validationError = `Please select exactly ${requiredCount} ${bookedSystem.systemType}(s) in ${bookedSystem.roomType}`;
+            break;
+          }
+        }
+      } else {
+        // Old format: total count validation
+        const totalSelected = systemAssignments.reduce((total, assignment) => 
+          total + assignment.systemIds.length, 0);
+        
+        const totalRequired = booking.numberOfSystems || 1;
+        
+        if (totalSelected !== totalRequired) {
+          validationError = `Please select exactly ${totalRequired} system(s)`;
+        }
+      }
       
-      if (totalSelected !== totalRequired) {
-        setError(`Please select exactly ${totalRequired} system(s)`);
+      if (validationError) {
+        setError(validationError);
         return;
       }
       
@@ -204,12 +335,11 @@ const SystemManagementModal = ({
     setError('');
     
     try {
-      // This would need a new API endpoint for individual system maintenance
-      // For now, we'll just refresh the status
+      await cafeService.updateSystemMaintenanceStatus(myCafe._id, roomName, systemId, newStatus);
       setSuccess(`System ${systemId} set to ${newStatus}`);
       await fetchSystemStatus();
     } catch (err) {
-      setError('Failed to update system status');
+      setError(err.response?.data?.message || 'Failed to update system status');
     } finally {
       setLoading(false);
     }
@@ -247,14 +377,29 @@ const SystemManagementModal = ({
             <Typography variant="body2">
               <strong>Duration:</strong> {formatDuration(booking.duration)}
             </Typography>
-            <Typography variant="body2">
+            <Typography variant="body2" sx={{ mt: 1 }}>
               <strong>Systems Required:</strong>
             </Typography>
             {booking.systemsBooked?.map((system, index) => (
-              <Typography key={index} variant="body2" sx={{ ml: 2 }}>
-                • {system.numberOfSystems}x {system.systemType} in {system.roomType}
-              </Typography>
+              <Paper key={index} sx={{ p: 1, mt: 1, ml: 2, bgcolor: 'warning.50', border: '1px solid', borderColor: 'warning.main' }}>
+                <Typography variant="body2" fontWeight="bold">
+                  {system.roomType}: {system.numberOfSystems}x {system.systemType}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Please select exactly {system.numberOfSystems} {system.systemType} system(s) from {system.roomType}
+                </Typography>
+              </Paper>
             ))}
+            {(!booking.systemsBooked || booking.systemsBooked.length === 0) && booking.roomType && (
+              <Paper sx={{ p: 1, mt: 1, ml: 2, bgcolor: 'warning.50', border: '1px solid', borderColor: 'warning.main' }}>
+                <Typography variant="body2" fontWeight="bold">
+                  {booking.roomType}: {booking.numberOfSystems || 1}x {booking.systemType}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Please select exactly {booking.numberOfSystems || 1} {booking.systemType} system(s) from {booking.roomType}
+                </Typography>
+              </Paper>
+            )}
           </Paper>
         )}
 
@@ -263,7 +408,14 @@ const SystemManagementModal = ({
 
         {/* Systems Grid */}
         <Grid container spacing={3}>
-          {cafe.rooms?.map((room) => (
+          {cafe.rooms?.filter((room) => {
+            // In assignment mode, only show rooms that were selected in the booking
+            if (mode === 'assignment' && booking?.systemsBooked) {
+              return booking.systemsBooked.some(system => system.roomType === room.name);
+            }
+            // In management mode, show all rooms
+            return true;
+          }).map((room) => (
             <Grid item xs={12} lg={6} key={room.name}>
               <Card>
                 <CardContent>
@@ -288,10 +440,23 @@ const SystemManagementModal = ({
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {room.systems?.map((system) => {
-                          const remainingTime = system.activeBooking && system.status === 'Active' 
-                            ? calculateRemainingTime(system.sessionEndTime) 
-                            : null;
+                        {room.systems?.filter((system) => {
+                          // In assignment mode, only show systems that were selected in the booking
+                          if (mode === 'assignment' && booking?.systemsBooked) {
+                            return booking.systemsBooked.some(bookedSystem => 
+                              bookedSystem.roomType === room.name && bookedSystem.systemType === system.type
+                            );
+                          }
+                          // In management mode, show all systems
+                          return true;
+                        }).map((system) => {
+                          // Calculate remaining time for active systems (recalculates every second due to timerTick state updates)
+                          let remainingTime = null;
+                          if (system.status === 'Active') {
+                            const sessionDuration = system.sessionDuration || 2;
+                            // timerTick forces this calculation to run every second
+                            remainingTime = calculateRemainingTime(system.sessionEndTime, system.sessionStartTime, sessionDuration, timerTick);
+                          }
                           
                           const isSelectable = mode === 'assignment' && system.status === 'Available';
                           const isSelected = selectedSystems[room.name]?.[system.systemId] || false;
@@ -412,7 +577,7 @@ const SystemManagementModal = ({
               size="large"
               startIcon={<PlayArrowIcon />}
               onClick={handleStartSession}
-              disabled={loading || Object.keys(selectedSystems).length === 0}
+              disabled={loading || !isValidSelection()}
             >
               {loading ? 'Starting...' : 'Start Session'}
             </Button>

@@ -116,9 +116,9 @@ const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
     e.preventDefault();
     setError('');
 
-    // Validation
-    if (bookingType === 'group' && !walkInCustomerName.trim()) {
-      setError('Customer name is required for group bookings');
+    // Validation - Customer name is always required now
+    if (!walkInCustomerName.trim()) {
+      setError('Customer name is required');
       return;
     }
 
@@ -141,7 +141,7 @@ const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
     // Prepare booking data
     const bookingData = {
       bookingType,
-      walkInCustomerName: bookingType === 'group' ? walkInCustomerName : undefined,
+      walkInCustomerName: walkInCustomerName.trim(), // Always include customer name
       systemsBooked,
       duration,
       cafeId: myCafe._id,
@@ -185,17 +185,15 @@ const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
             />
           </Tabs>
           
-          {bookingType === 'group' && (
-            <TextField 
-              fullWidth 
-              label="Customer Name" 
-              value={walkInCustomerName} 
-              onChange={(e) => setWalkInCustomerName(e.target.value)}
-              placeholder="Enter group representative's name"
-              required
-              sx={{ mt: 2 }}
-            />
-          )}
+          <TextField 
+            fullWidth 
+            label={bookingType === 'group' ? "Group Representative Name" : "Customer Name"} 
+            value={walkInCustomerName} 
+            onChange={(e) => setWalkInCustomerName(e.target.value)}
+            placeholder={bookingType === 'group' ? "Enter group representative's name" : "Enter customer's name"}
+            required={bookingType === 'group'}
+            sx={{ mt: 2 }}
+          />
         </Paper>
 
         {/* Duration Selection */}
