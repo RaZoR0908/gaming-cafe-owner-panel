@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import cafeService from '../services/cafeService';
+import WalkInBookingModal from '../components/WalkInBookingModal';
+import SystemManagementModal from '../components/SystemManagementModal';
 
 // --- Material-UI Imports ---
 import {
   AppBar, Toolbar, Typography, Button, Container, Box, Card, CardContent,
   Grid, CircularProgress, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, Chip, Modal, TextField, MenuItem, Alert, IconButton,
+  TableHead, TableRow, Paper, Chip, TextField, Alert, IconButton,
   Rating,  Avatar,  Stack
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import StarIcon from '@mui/icons-material/Star';
 import PersonIcon from '@mui/icons-material/Person';
@@ -24,19 +24,10 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ComputerIcon from '@mui/icons-material/Computer';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
-// Simple modal style
-const modalStyle = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: { xs: '90%', sm: 500 },
-  bgcolor: 'background.paper',
-  boxShadow: 24,
-  p: 4,
-  borderRadius: 2,
-};
+
 
 // Helper function to format duration
 const formatDuration = (hours) => {
@@ -79,15 +70,11 @@ const DashboardPage = () => {
   // --- State for the re-confirmation step ---
   const [bookingToReconfirm, setBookingToReconfirm] = useState(null);
 
-  // --- State for the walk-in modal ---
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [walkInData, setWalkInData] = useState({
-    walkInCustomerName: '',
-    roomType: '',
-    systemType: '',
-    numberOfSystems: 1,
-    duration: 1,
-  });
+  // --- State for modals ---
+  const [isWalkInModalOpen, setWalkInModalOpen] = useState(false);
+  const [isSystemManagementModalOpen, setSystemManagementModalOpen] = useState(false);
+  const [systemManagementMode, setSystemManagementMode] = useState('management'); // 'management' or 'assignment'
+  const [selectedBookingForAssignment, setSelectedBookingForAssignment] = useState(null);
 
   const navigate = useNavigate();
 
@@ -165,13 +152,13 @@ const DashboardPage = () => {
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
     const todayBookings = allBookings.filter(b => b.bookingDate.startsWith(today));
-    const confirmedBookings = allBookings.filter(b => b.status === 'Confirmed');
+    const activeBookings = allBookings.filter(b => ['Booked', 'Confirmed', 'Active'].includes(b.status));
     const totalRevenue = allBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
     const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : 0;
     
     return {
       todayBookings: todayBookings.length,
-      confirmedBookings: confirmedBookings.length,
+      confirmedBookings: activeBookings.length,
       totalRevenue,
       averageRating,
       totalReviews: reviews.length
@@ -235,47 +222,53 @@ const DashboardPage = () => {
     }
   };
 
-  const handleOpenModal = () => setModalOpen(true);
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setWalkInData({ walkInCustomerName: '', roomType: '', systemType: '', numberOfSystems: 1, duration: 1 });
-  };
+  // Walk-in booking handlers
+  const handleOpenWalkInModal = () => setWalkInModalOpen(true);
+  const handleCloseWalkInModal = () => setWalkInModalOpen(false);
 
-  const handleWalkInChange = (e) => {
-    const { name, value } = e.target;
-    setWalkInData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleDurationChange = (amount) => {
-    setWalkInData(prev => ({
-      ...prev,
-      duration: Math.max(0.5, prev.duration + amount)
-    }));
-  };
-
-  const handleWalkInSubmit = async (e) => {
-    e.preventDefault();
+  const handleWalkInSubmit = async (bookingData) => {
     setError('');
     setSuccess('');
     try {
-      const today = new Date();
-      const startTime = today.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-      const bookingData = {
-        ...walkInData,
-        cafeId: myCafe._id,
-        bookingDate: today.toISOString().split('T')[0],
-        startTime: startTime,
-      };
-      await cafeService.createWalkInBooking(bookingData);
-      setSuccess('Walk-in booking added successfully!');
-      handleCloseModal();
+      const createdBooking = await cafeService.createWalkInBooking(bookingData);
+      setSuccess('Walk-in booking created successfully!');
+      handleCloseWalkInModal();
+      
+      // Open system assignment modal
+      setSelectedBookingForAssignment(createdBooking);
+      setSystemManagementMode('assignment');
+      setSystemManagementModalOpen(true);
+      
       fetchCafeData();
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to create walk-in booking.';
       setError(message);
-      handleCloseModal();
+      handleCloseWalkInModal();
     }
+  };
+
+  // System management handlers
+  const handleOpenSystemManagement = () => {
+    setSystemManagementMode('management');
+    setSelectedBookingForAssignment(null);
+    setSystemManagementModalOpen(true);
+  };
+
+  const handleCloseSystemManagement = () => {
+    setSystemManagementModalOpen(false);
+    setSelectedBookingForAssignment(null);
+  };
+
+  const handleSystemsAssigned = () => {
+    fetchCafeData();
+    setSuccess('Session started successfully!');
+  };
+
+  // Handle start session for booked bookings
+  const handleStartSession = (booking) => {
+    setSelectedBookingForAssignment(booking);
+    setSystemManagementMode('assignment');
+    setSystemManagementModalOpen(true);
   };
 
   if (loading) {
@@ -382,7 +375,7 @@ const DashboardPage = () => {
             </Grid>
 
             {/* Simple Navigation Buttons */}
-            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+            <Stack direction="row" spacing={2} sx={{ mb: 3 }} flexWrap="wrap">
               <Button 
                 variant={currentView === 'dashboard' ? 'contained' : 'outlined'}
                 onClick={() => setCurrentView('dashboard')}
@@ -398,6 +391,15 @@ const DashboardPage = () => {
                 size="large"
               >
                 Bookings
+              </Button>
+              <Button 
+                variant="outlined"
+                onClick={handleOpenSystemManagement}
+                startIcon={<ComputerIcon />}
+                size="large"
+                color="secondary"
+              >
+                System Management
               </Button>
               <Button 
                 variant={currentView === 'reviews' ? 'contained' : 'outlined'}
@@ -468,7 +470,7 @@ const DashboardPage = () => {
                         <Button 
                           variant="contained" 
                           color="secondary" 
-                          onClick={handleOpenModal}
+                          onClick={handleOpenWalkInModal}
                           startIcon={<AddIcon />}
                           fullWidth
                           size="large"
@@ -503,7 +505,7 @@ const DashboardPage = () => {
                     <Button 
                       variant="contained" 
                       startIcon={<AddIcon />} 
-                      onClick={handleOpenModal}
+                      onClick={handleOpenWalkInModal}
                       size="large"
                     >
                       Add Walk-in
@@ -594,7 +596,9 @@ const DashboardPage = () => {
                                 <Chip 
                                   label={booking.status} 
                                   color={
+                                    booking.status === 'Booked' ? 'info' :
                                     booking.status === 'Confirmed' ? 'primary' : 
+                                    booking.status === 'Active' ? 'warning' :
                                     booking.status === 'Completed' ? 'success' : 
                                     booking.status === 'Cancelled' ? 'error' : 'default'
                                   }
@@ -602,7 +606,19 @@ const DashboardPage = () => {
                                 />
                               </TableCell>
                               <TableCell align="center">
-                                <Stack direction="row" spacing={1} justifyContent="center">
+                                <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap">
+                                  {booking.status === 'Booked' && (
+                                    <Button 
+                                      size="small" 
+                                      variant="contained" 
+                                      color="primary"
+                                      onClick={() => handleStartSession(booking)}
+                                      startIcon={<PlayArrowIcon />}
+                                    >
+                                      Start Session
+                                    </Button>
+                                  )}
+                                  
                                   {booking.status === 'Confirmed' && (
                                     <>
                                       <Button 
@@ -625,6 +641,25 @@ const DashboardPage = () => {
                                       </Button>
                                     </>
                                   )}
+
+                                  {booking.status === 'Active' && (
+                                    <>
+                                      <Button 
+                                        size="small" 
+                                        variant="outlined" 
+                                        color="info" 
+                                        onClick={() => handleExtendBooking(booking._id)}
+                                      >
+                                        Extend
+                                      </Button>
+                                      {booking.assignedSystems && booking.assignedSystems.length > 0 && (
+                                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                                          Systems: {booking.assignedSystems.map(s => s.systemId).join(', ')}
+                                        </Typography>
+                                      )}
+                                    </>
+                                  )}
+                                  
                                   {booking.status === 'Cancelled' && isReconfirmable && (
                                      <>
                                       {bookingToReconfirm === booking._id ? (
@@ -838,119 +873,22 @@ const DashboardPage = () => {
       </Container>
 
       {/* Walk-in Booking Modal */}
-      <Modal open={isModalOpen} onClose={handleCloseModal}>
-        <Box sx={modalStyle} component="form" onSubmit={handleWalkInSubmit}>
-          <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-            Add Walk-in Booking
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Create an instant booking for walk-in customers
-          </Typography>
-          
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField 
-                fullWidth 
-                label="Customer Name (Optional)" 
-                name="walkInCustomerName" 
-                value={walkInData.walkInCustomerName} 
-                onChange={handleWalkInChange}
-                size="medium"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField 
-                select 
-                fullWidth 
-                label="Room" 
-                name="roomType" 
-                value={walkInData.roomType} 
-                onChange={handleWalkInChange} 
-                required
-                size="medium"
-              >
-                {myCafe?.rooms.map(room => (
-                  <MenuItem key={room.roomType} value={room.roomType}>
-                    {room.roomType}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField 
-                select 
-                fullWidth 
-                label="System" 
-                name="systemType" 
-                value={walkInData.systemType} 
-                onChange={handleWalkInChange} 
-                disabled={!walkInData.roomType} 
-                required
-                size="medium"
-              >
-                {myCafe?.rooms.find(r => r.roomType === walkInData.roomType)?.systems.map(sys => (
-                  <MenuItem key={sys.systemType} value={sys.systemType}>
-                    {sys.systemType} - ₹{sys.pricePerHour}/hr
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={6}>
-              <TextField 
-                fullWidth 
-                label="No. of Systems" 
-                name="numberOfSystems" 
-                type="number" 
-                value={walkInData.numberOfSystems}
-                onChange={handleWalkInChange} 
-                required 
-                InputProps={{ inputProps: { min: 1 } }}
-                size="medium"
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <Typography variant="subtitle2" gutterBottom>Duration</Typography>
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between', 
-                border: '1px solid #ccc', 
-                borderRadius: 1, 
-                p: 1 
-              }}>
-                <IconButton onClick={() => handleDurationChange(-0.5)} disabled={walkInData.duration <= 0.5}>
-                  <RemoveCircleOutlineIcon />
-                </IconButton>
-                <Typography variant="h6" sx={{ minWidth: 80, textAlign: 'center' }}>
-                  {formatDuration(walkInData.duration)}
-                </Typography>
-                <IconButton onClick={() => handleDurationChange(0.5)}>
-                  <AddCircleOutlineIcon />
-                </IconButton>
-              </Box>
-            </Grid>
-          </Grid>
+      <WalkInBookingModal
+        open={isWalkInModalOpen}
+        onClose={handleCloseWalkInModal}
+        myCafe={myCafe}
+        onSubmit={handleWalkInSubmit}
+      />
 
-          {/* Total Price Display */}
-          {walkInData.roomType && walkInData.systemType && (
-            <Box sx={{ mt: 3, p: 2, bgcolor: 'success.50', borderRadius: 1 }}>
-              <Typography variant="h6" color="success.main" fontWeight="bold" textAlign="center">
-                Total: ₹{(() => {
-                  const room = myCafe?.rooms.find(r => r.roomType === walkInData.roomType);
-                  const system = room?.systems.find(s => s.systemType === walkInData.systemType);
-                  const price = system ? system.pricePerHour * walkInData.numberOfSystems * walkInData.duration : 0;
-                  return price.toFixed(0);
-                })()}
-              </Typography>
-            </Box>
-          )}
-          
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-            <Button onClick={handleCloseModal} size="large">Cancel</Button>
-            <Button type="submit" variant="contained" size="large">Add Booking</Button>
-          </Box>
-        </Box>
-      </Modal>
+      {/* System Management Modal */}
+      <SystemManagementModal
+        open={isSystemManagementModalOpen}
+        onClose={handleCloseSystemManagement}
+        myCafe={myCafe}
+        mode={systemManagementMode}
+        booking={selectedBookingForAssignment}
+        onSystemsAssigned={handleSystemsAssigned}
+      />
     </Box>
   );
 };

@@ -77,6 +77,50 @@ const getOwnerReviews = async () => {
 
 
 
+// --- NEW SYSTEM MANAGEMENT FUNCTIONS ---
+const assignSystemsAndStartSession = async (bookingId, systemAssignments) => {
+  const config = { headers: getAuthHeader() };
+  const response = await axios.post(
+    BOOKING_API_URL + 'assign-systems',
+    { bookingId, systemAssignments },
+    config
+  );
+  return response.data;
+};
+
+const endSession = async (bookingId) => {
+  const config = { headers: getAuthHeader() };
+  const response = await axios.post(
+    BOOKING_API_URL + 'end-session',
+    { bookingId },
+    config
+  );
+  return response.data;
+};
+
+const getAvailableSystemsForAssignment = async (cafeId, roomTypes, systemTypes) => {
+  const config = { headers: getAuthHeader() };
+  const params = new URLSearchParams();
+  if (roomTypes) params.append('roomTypes', roomTypes.join(','));
+  if (systemTypes) params.append('systemTypes', systemTypes.join(','));
+  
+  const response = await axios.get(
+    `${BOOKING_API_URL}available-systems/${cafeId}?${params.toString()}`,
+    config
+  );
+  return response.data;
+};
+
+const autoCompleteExpiredSessions = async () => {
+  const config = { headers: getAuthHeader() };
+  const response = await axios.post(
+    BOOKING_API_URL + 'auto-complete-sessions',
+    {},
+    config
+  );
+  return response.data;
+};
+
 const cafeService = {
   getAllCafes,
   getMyCafe,
@@ -89,6 +133,10 @@ const cafeService = {
   extendBooking,
   createWalkInBooking,
   getOwnerReviews,
+  assignSystemsAndStartSession,
+  endSession,
+  getAvailableSystemsForAssignment,
+  autoCompleteExpiredSessions,
 };
 
 export default cafeService;
