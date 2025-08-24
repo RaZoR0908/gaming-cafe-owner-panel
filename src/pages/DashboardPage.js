@@ -396,9 +396,14 @@ const DashboardPage = () => {
 
   // Handle start session for booked bookings
   const handleStartSession = (booking) => {
+    console.log('🎯 START button clicked for booking:', booking);
+    console.log('🔍 Setting selected booking:', booking);
+    console.log('🔍 Setting mode to assignment');
     setSelectedBookingForAssignment(booking);
     setSystemManagementMode('assignment');
+    console.log('🔍 Opening system management modal');
     setSystemManagementModalOpen(true);
+    console.log('🔍 Modal state should now be open');
   };
 
   if (loading) {
@@ -1446,6 +1451,11 @@ const DashboardPage = () => {
         booking={selectedBookingForAssignment}
         onSystemsAssigned={handleSystemsAssigned}
       />
+      
+      {/* Debug info */}
+      {console.log('🔍 Modal debug - isSystemManagementModalOpen:', isSystemManagementModalOpen)}
+      {console.log('🔍 Modal debug - systemManagementMode:', systemManagementMode)}
+      {console.log('🔍 Modal debug - selectedBookingForAssignment:', selectedBookingForAssignment)}
 
       {/* Extend Session Modal */}
       <ExtendSessionModal

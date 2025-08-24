@@ -26,6 +26,7 @@ const modalStyle = {
   p: 2, // Reduced padding from 3 to 2
   borderRadius: 2,
   overflow: 'auto',
+  zIndex: 9999, // Add explicit z-index
 };
 
 // Helper function to calculate remaining time
@@ -104,6 +105,11 @@ const SystemManagementModal = ({
   booking = null, // For assignment mode
   onSystemsAssigned = null // Callback for assignment
 }) => {
+  console.log('🔍 SystemManagementModal render - open:', open);
+  console.log('🔍 SystemManagementModal render - mode:', mode);
+  console.log('🔍 SystemManagementModal render - booking:', booking);
+  console.log('🔍 SystemManagementModal render - myCafe:', myCafe);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -203,7 +209,7 @@ const SystemManagementModal = ({
   const isValidSelection = useCallback(() => {
     if (!booking || mode !== 'assignment') return false;
     
-    if (booking.systemsBooked) {
+    if (booking.systemsBooked && booking.systemsBooked.length > 0) {
       // New format: validate each system type separately
       for (const bookedSystem of booking.systemsBooked) {
         const selectedCount = Object.values(selectedSystems[bookedSystem.roomType] || {})
@@ -215,11 +221,16 @@ const SystemManagementModal = ({
       }
       return true;
     } else {
-      // Old format: total count validation
-      const totalSelected = Object.values(selectedSystems).reduce((total, room) => 
-        total + Object.values(room || {}).filter(Boolean).length, 0);
+      // Old format: validate for specific room and system type
+      const roomName = booking.roomType;
+      const systemType = booking.systemType;
+      const requiredCount = booking.numberOfSystems || 1;
       
-      return totalSelected === (booking.numberOfSystems || 1);
+      // Count selected systems in the specific room
+      const selectedCount = Object.values(selectedSystems[roomName] || {})
+        .filter(Boolean).length;
+      
+      return selectedCount === requiredCount;
     }
   }, [selectedSystems, booking, mode]);
 
@@ -345,11 +356,33 @@ const SystemManagementModal = ({
 
   const cafe = systemStatus || myCafe;
   
-  if (!cafe) return null;
+  console.log('🔍 Modal cafe check - cafe:', cafe);
+  console.log('🔍 Modal cafe check - systemStatus:', systemStatus);
+  console.log('🔍 Modal cafe check - myCafe:', myCafe);
+  
+  if (!cafe) {
+    console.log('❌ Modal returning null - no cafe data');
+    return null;
+  }
 
   return (
-    <Modal open={open} onClose={onClose}>
-      <Box sx={modalStyle}>
+    <>
+      {/* Custom Modal Implementation */}
+      {open && (
+        <div style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%', 
+          backgroundColor: 'rgba(0,0,0,0.5)', 
+          zIndex: 9998,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }} onClick={onClose}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <Box sx={modalStyle}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}> {/* Reduced margin from 2 to 1.5 */}
           <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
             {mode === 'assignment' ? 'Assign Systems & Start Session' : 'System Management'}
@@ -414,8 +447,14 @@ const SystemManagementModal = ({
         <Grid container spacing={2}> {/* Reduced spacing from 3 to 2 */}
           {cafe.rooms?.filter((room) => {
             // In assignment mode, only show rooms that were selected in the booking
-            if (mode === 'assignment' && booking?.systemsBooked) {
-              return booking.systemsBooked.some(system => system.roomType === room.name);
+            if (mode === 'assignment' && booking) {
+              if (booking.systemsBooked && booking.systemsBooked.length > 0) {
+                // New format: check systemsBooked array
+                return booking.systemsBooked.some(system => system.roomType === room.name);
+              } else if (booking.roomType) {
+                // Old format: check roomType field
+                return booking.roomType === room.name;
+              }
             }
             // In management mode, show all rooms
             return true;
@@ -446,10 +485,16 @@ const SystemManagementModal = ({
                       <TableBody>
                         {room.systems?.filter((system) => {
                           // In assignment mode, only show systems that were selected in the booking
-                          if (mode === 'assignment' && booking?.systemsBooked) {
-                            return booking.systemsBooked.some(bookedSystem => 
-                              bookedSystem.roomType === room.name && bookedSystem.systemType === system.type
-                            );
+                          if (mode === 'assignment' && booking) {
+                            if (booking.systemsBooked && booking.systemsBooked.length > 0) {
+                              // New format: check systemsBooked array
+                              return booking.systemsBooked.some(bookedSystem => 
+                                bookedSystem.roomType === room.name && bookedSystem.systemType === system.type
+                              );
+                            } else if (booking.roomType && booking.systemType) {
+                              // Old format: check roomType and systemType fields
+                              return booking.roomType === room.name && booking.systemType === system.type;
+                            }
                           }
                           // In management mode, show all systems
                           return true;
@@ -597,7 +642,10 @@ const SystemManagementModal = ({
           )}
         </Box>
       </Box>
-    </Modal>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
