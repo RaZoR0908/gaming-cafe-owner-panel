@@ -66,7 +66,7 @@ const SystemCard = ({ system, roomIndex, systemIndex, handleSystemSpecChange }) 
 const CreateCafePage = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
-    name: '', address: '', openingTime: '10:00', closingTime: '22:00', longitude: '', latitude: '',
+    name: '', address: '', openingTime: '10:00', closingTime: '22:00', longitude: '', latitude: '', contactNumber: '', description: '',
   });
   const [rooms, setRooms] = useState([{ name: '', systems: [] }]);
   const [systemAddForm, setSystemAddForm] = useState({ systemType: 'PC', count: 1, pricePerHour: '' });
@@ -229,7 +229,7 @@ const CreateCafePage = () => {
       name: formData.name, address: formData.address,
       openingTime: formData.openingTime, closingTime: formData.closingTime,
       location: { type: 'Point', coordinates: [parseFloat(formData.longitude), parseFloat(formData.latitude)] },
-      rooms: rooms, images: photos,
+      rooms: rooms, images: photos, contactNumber: formData.contactNumber, description: formData.description,
     };
     try {
       await cafeService.createCafe(cafeData);
@@ -266,6 +266,8 @@ const CreateCafePage = () => {
             )}
             <Grid item xs={6}><TextField fullWidth label="Opening Time" name="openingTime" type="time" value={formData.openingTime} onChange={handleChange} InputLabelProps={{ shrink: true }} required /></Grid>
             <Grid item xs={6}><TextField fullWidth label="Closing Time" name="closingTime" type="time" value={formData.closingTime} onChange={handleChange} InputLabelProps={{ shrink: true }} required /></Grid>
+            <Grid item xs={12}><TextField fullWidth label="Contact Number" name="contactNumber" value={formData.contactNumber} onChange={handleChange} placeholder="e.g., 9876543210" helperText="Phone number where customers can reach you (10 digits only)" inputProps={{ maxLength: 10, pattern: '[0-9]*' }} /></Grid>
+            <Grid item xs={12}><TextField fullWidth label="Cafe Description" name="description" value={formData.description} onChange={handleChange} multiline rows={3} placeholder="Describe your gaming cafe, atmosphere, special features, etc." helperText="Tell customers what makes your cafe special (max 500 characters)" inputProps={{ maxLength: 500 }} /></Grid>
           </Grid>
         );
       case 1:

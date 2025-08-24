@@ -27,7 +27,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ComputerIcon from '@mui/icons-material/Computer';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
 
 // Helper function to format duration
@@ -124,6 +123,34 @@ const DashboardPage = () => {
     }
   }, []);
 
+  const handleRefreshStatus = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      // Call the auto-complete sessions API
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/bookings/auto-complete-sessions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${JSON.parse(localStorage.getItem('user'))?.token}`
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setSuccess(`Status refreshed: ${result.message}`);
+        setLastStatusRefresh(new Date()); // Update last refresh time
+        // Refresh the data to show updated statuses
+        await fetchCafeData();
+      } else {
+        setError('Failed to refresh status');
+      }
+    } catch (err) {
+      setError('Failed to refresh status');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchCafeData]);
+
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user'));
     setUser(userData);
@@ -139,7 +166,7 @@ const DashboardPage = () => {
     if (user && !loading) {
       handleRefreshStatus();
     }
-  }, [user, loading]);
+  }, [user, loading, handleRefreshStatus]);
 
   // Auto-cancel cancelled bookings after 10 minutes if not reconfirmed
   useEffect(() => {
@@ -254,35 +281,11 @@ const DashboardPage = () => {
     fetchReviews();
   };
 
-  const handleRefreshStatus = async () => {
-    try {
-      setRefreshing(true);
-      // Call the auto-complete sessions API
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/bookings/auto-complete-sessions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${JSON.parse(localStorage.getItem('user'))?.token}`
-        }
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        setSuccess(`Status refreshed: ${result.message}`);
-        setLastStatusRefresh(new Date()); // Update last refresh time
-        // Refresh the data to show updated statuses
-        await fetchCafeData();
-      } else {
-        setError('Failed to refresh status');
-      }
-    } catch (err) {
-      setError('Failed to refresh status');
-    } finally {
-      setRefreshing(false);
-    }
-  };
+
 
   const handleDelete = async () => {
+    if (!myCafe) return;
+    
     if (window.confirm('Are you sure you want to delete your cafe? This action cannot be undone.')) {
       try {
         await cafeService.deleteCafe(myCafe._id);
@@ -406,6 +409,99 @@ const DashboardPage = () => {
     );
   }
 
+  if (!myCafe) {
+    return (
+      <Box sx={{ flexGrow: 1, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+        {/* Header */}
+        <AppBar position="static" sx={{ backgroundColor: '#1976d2' }}>
+          <Toolbar>
+            <DashboardIcon sx={{ mr: 2 }} />
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+              Welcome to Gaming Cafe Dashboard
+            </Typography>
+            <Button color="inherit" onClick={handleLogout}>Logout</Button>
+          </Toolbar>
+        </AppBar>
+
+        {/* Main Content */}
+        <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            textAlign: 'center',
+            bgcolor: 'white',
+            p: 4,
+            borderRadius: 3,
+            boxShadow: 3
+          }}>
+            <BusinessIcon sx={{ fontSize: 60, color: '#1976d2', mb: 2 }} />
+            <Typography variant="h5" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+              Welcome to Your Dashboard!
+            </Typography>
+            <Typography variant="h6" sx={{ mb: 1, color: 'text.secondary' }}>
+              {user ? `Hello, ${user.name}!` : 'Hello, Cafe Owner!'}
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary', maxWidth: 500 }}>
+              It looks like you haven't created your gaming cafe yet. Let's get started by setting up your cafe profile.
+            </Typography>
+            
+            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+              <Button 
+                variant="contained" 
+                size="large"
+                component={Link}
+                to="/create-cafe"
+                startIcon={<AddIcon />}
+                sx={{ 
+                  px: 3, 
+                  py: 1,
+                  fontSize: '1rem',
+                  fontWeight: 'bold'
+                }}
+              >
+                Create Your Cafe
+              </Button>
+              <Button 
+                variant="outlined" 
+                size="large"
+                onClick={() => window.location.reload()}
+                startIcon={<RefreshIcon />}
+                sx={{ px: 3, py: 1 }}
+              >
+                Refresh
+              </Button>
+            </Stack>
+
+            <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, maxWidth: 500 }}>
+              <Typography variant="subtitle1" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+                What you'll be able to do:
+              </Typography>
+              <Stack spacing={0.5} sx={{ textAlign: 'left' }}>
+                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                  <PlayArrowIcon sx={{ fontSize: 14, mr: 1, color: 'success.main' }} />
+                  Manage gaming systems and room bookings
+                </Typography>
+                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                  <PlayArrowIcon sx={{ fontSize: 14, mr: 1, color: 'success.main' }} />
+                  Handle walk-in customers and reservations
+                </Typography>
+                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                  <PlayArrowIcon sx={{ fontSize: 14, mr: 1, color: 'success.main' }} />
+                  Track revenue and customer reviews
+                </Typography>
+                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                  <PlayArrowIcon sx={{ fontSize: 14, mr: 1, color: 'success.main' }} />
+                  Monitor system status and maintenance
+                </Typography>
+              </Stack>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ flexGrow: 1, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
       {/* Simple Header */}
@@ -428,28 +524,29 @@ const DashboardPage = () => {
         </Toolbar>
       </AppBar>
       
-      <Container maxWidth="lg" sx={{ mt: 3, mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
+      <Container maxWidth="lg" sx={{ mt: 2, mb: 3 }}>
+        <Typography variant="h5" sx={{ mb: 1, fontWeight: 'bold' }}>
           Welcome, {user ? user.name : 'Owner'}!
         </Typography>
         
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 1.5, py: 0.5 }}>{error}</Alert>}
+        {success && <Alert severity="success" sx={{ mb: 1.5, py: 0.5 }}>{success}</Alert>}
         
         {/* Status Refresh Info */}
         {lastStatusRefresh && (
-          <Alert severity="info" sx={{ mb: 2 }}>
+          <Alert severity="info" sx={{ mb: 1.5, py: 0.5 }}>
             Last status refresh: {lastStatusRefresh.toLocaleString()}
           </Alert>
         )}
         
         {/* Simple Navigation Buttons */}
-        <Stack direction="row" spacing={2} sx={{ mb: 3 }} flexWrap="wrap">
+        <Stack direction="row" spacing={1.5} sx={{ mb: 1.5 }} flexWrap="wrap">
           <Button 
             variant={currentView === 'dashboard' ? 'contained' : 'outlined'}
             onClick={() => setCurrentView('dashboard')}
             startIcon={<DashboardIcon />}
-            size="large"
+            size="medium"
+            sx={{ py: 0.5, px: 1.5 }}
           >
             Overview
           </Button>
@@ -457,7 +554,8 @@ const DashboardPage = () => {
             variant={currentView === 'bookings' ? 'contained' : 'outlined'}
             onClick={() => setCurrentView('bookings')}
             startIcon={<BookingsIcon />}
-            size="large"
+            size="medium"
+            sx={{ py: 0.5, px: 1.5 }}
           >
             Bookings
           </Button>
@@ -465,8 +563,9 @@ const DashboardPage = () => {
             variant="outlined"
             onClick={handleOpenSystemManagement}
             startIcon={<ComputerIcon />}
-            size="large"
+            size="medium"
             color="secondary"
+            sx={{ py: 0.5, px: 1.5 }}
           >
             System Management
           </Button>
@@ -474,7 +573,8 @@ const DashboardPage = () => {
             variant={currentView === 'reviews' ? 'contained' : 'outlined'}
             onClick={() => setCurrentView('reviews')}
             startIcon={<ReviewsIcon />}
-            size="large"
+            size="medium"
+            sx={{ py: 0.5, px: 1.5 }}
           >
             Reviews
           </Button>
@@ -482,75 +582,73 @@ const DashboardPage = () => {
             variant={currentView === 'cafe' ? 'contained' : 'outlined'}
             onClick={() => setCurrentView('cafe')}
             startIcon={<BusinessIcon />}
-            size="large"
+            size="medium"
+            sx={{ py: 0.5, px: 1.5 }}
           >
             Cafe Settings
           </Button>
         </Stack>
 
         {/* Quick Stats */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid container spacing={2} sx={{ mb: 1.5 }}>
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ bgcolor: '#e3f2fd', borderLeft: '4px solid #1976d2' }}>
-              <CardContent>
+              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1976d2', mb: 0.5 }}>
                       {stats.todayBookings}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">Today's Bookings</Typography>
+                    <Typography variant="caption" color="text.secondary">Today's Bookings</Typography>
                   </Box>
-                  <AccessTimeIcon sx={{ fontSize: 40, color: '#1976d2', opacity: 0.7 }} />
+                  <AccessTimeIcon sx={{ fontSize: 32, color: '#1976d2', opacity: 0.7 }} />
                 </Box>
               </CardContent>
             </Card>
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ bgcolor: '#f3e5f5', borderLeft: '4px solid #9c27b0' }}>
-              <CardContent>
+              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#9c27b0' }}>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#9c27b0', mb: 0.5 }}>
                       {stats.confirmedBookings}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">Active Bookings</Typography>
+                    <Typography variant="caption" color="text.secondary">Active Bookings</Typography>
                   </Box>
-                  <BookingsIcon sx={{ fontSize: 40, color: '#9c27b0', opacity: 0.7 }} />
+                  <BookingsIcon sx={{ fontSize: 32, color: '#9c27b0', opacity: 0.7 }} />
                 </Box>
               </CardContent>
             </Card>
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ bgcolor: '#e8f5e8', borderLeft: '4px solid #388e3c' }}>
-              <CardContent>
+              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#388e3c' }}>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#388e3c', mb: 0.5 }}>
                       ₹{stats.totalRevenue.toLocaleString()}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">Total Revenue</Typography>
+                    <Typography variant="caption" color="text.secondary">Total Revenue</Typography>
                   </Box>
-                  <TrendingUpIcon sx={{ fontSize: 40, color: '#388e3c', opacity: 0.7 }} />
+                  <TrendingUpIcon sx={{ fontSize: 32, color: '#388e3c', opacity: 0.7 }} />
                 </Box>
               </CardContent>
             </Card>
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ bgcolor: '#fff3e0', borderLeft: '4px solid #f57c00' }}>
-              <CardContent>
+              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#f57c00' }}>
-                        {stats.averageRating}
-                      </Typography>
-                      <StarIcon sx={{ color: '#f57c00' }} />
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#f57c00', mb: 0.5 }}>
+                      {stats.averageRating}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
                       Avg Rating ({stats.totalReviews})
                     </Typography>
                   </Box>
-                  <ReviewsIcon sx={{ fontSize: 40, color: '#f57c00', opacity: 0.7 }} />
+                  <ReviewsIcon sx={{ fontSize: 32, color: '#f57c00', opacity: 0.7 }} />
                 </Box>
               </CardContent>
             </Card>
@@ -559,39 +657,48 @@ const DashboardPage = () => {
 
         {/* Dashboard Overview */}
         {currentView === 'dashboard' && (
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h5" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
-                    <BusinessIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+            {/* Quick Info Card - Left Side */}
+            <Box sx={{ flex: { xs: '1 1 100%', md: '0 0 66.666667%' } }}>
+              <Card sx={{ height: '100%' }}>
+                <CardContent sx={{ p: 2.5 }}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold', mb: 2 }}>
+                    <BusinessIcon sx={{ mr: 1, verticalAlign: 'middle', fontSize: 20 }} />
                     Quick Info
                   </Typography>
-                  <Typography variant="h6" gutterBottom>{myCafe.name}</Typography>
-                  <Typography variant="body1" color="text.secondary" gutterBottom>
-                    <strong>Address:</strong> {myCafe.address}
+                  <Typography variant="h6" sx={{ mb: 1.5, fontSize: '1.1rem', fontWeight: '600' }}>{myCafe?.name || 'Loading...'}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, lineHeight: 1.5 }}>
+                    <strong>Address:</strong> {myCafe?.address || 'Loading...'}
                   </Typography>
-                  <Typography variant="body1" color="text.secondary" gutterBottom>
-                    <strong>Contact:</strong> {myCafe.contactNumber || 'Not provided'}
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, lineHeight: 1.5 }}>
+                    <strong>Contact:</strong> {myCafe?.contactNumber || 'Not provided'}
                   </Typography>
+                  {myCafe?.description && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontStyle: 'italic', lineHeight: 1.5 }}>
+                      <strong>Description:</strong> {myCafe.description}
+                    </Typography>
+                  )}
                   <Box sx={{ mt: 2 }}>
                     <Button 
                       variant="contained" 
                       component={Link} 
-                      to={`/edit-cafe/${myCafe._id}`}
+                      to={`/edit-cafe/${myCafe?._id}`}
                       startIcon={<EditIcon />}
-                      sx={{ mr: 1 }}
+                      size="small"
+                      disabled={!myCafe}
                     >
                       Edit Details
                     </Button>
                   </Box>
                 </CardContent>
               </Card>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h5" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+            </Box>
+            
+            {/* Quick Actions Card - Right Side */}
+            <Box sx={{ flex: { xs: '1 1 100%', md: '0 0 33.333333%' } }}>
+              <Card sx={{ height: '100%' }}>
+                <CardContent sx={{ p: 2.5 }}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold', mb: 2 }}>
                     Quick Actions
                   </Typography>
                   <Stack spacing={2}>
@@ -601,7 +708,7 @@ const DashboardPage = () => {
                       onClick={() => setCurrentView('bookings')}
                       startIcon={<BookingsIcon />}
                       fullWidth
-                      size="large"
+                      size="medium"
                     >
                       Manage Bookings
                     </Button>
@@ -611,7 +718,7 @@ const DashboardPage = () => {
                       onClick={handleOpenWalkInModal}
                       startIcon={<AddIcon />}
                       fullWidth
-                      size="large"
+                      size="medium"
                     >
                       Add Walk-in Booking
                     </Button>
@@ -620,15 +727,15 @@ const DashboardPage = () => {
                       onClick={() => setCurrentView('reviews')}
                       startIcon={<ReviewsIcon />}
                       fullWidth
-                      size="large"
+                      size="medium"
                     >
                       View Customer Reviews
                     </Button>
                   </Stack>
                 </CardContent>
               </Card>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         )}
 
         {/* Simple Bookings Management */}
@@ -812,10 +919,7 @@ const DashboardPage = () => {
                       const bookingDateTime = new Date(booking.bookingDate);
                       bookingDateTime.setHours(bookingStartHour, 0, 0, 0);
                       
-                      const hoursUntilBooking = (bookingDateTime - now) / (1000 * 60 * 60);
-                      const isWalkIn = !booking.customer && booking.walkInCustomerName;
                       // Owner can always cancel their own bookings (both walk-in and scheduled)
-                      const isCancellable = true; // Owner has full control over cancellations
 
                       const minutesSinceUpdate = (now - new Date(booking.updatedAt)) / (1000 * 60);
                       const isReconfirmable = minutesSinceUpdate < 10; // Back to 10 minutes as originally set
@@ -1225,22 +1329,28 @@ const DashboardPage = () => {
                     Cafe Details
                   </Typography>
                   <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6" gutterBottom>{myCafe.name}</Typography>
+                    <Typography variant="h6" gutterBottom>{myCafe?.name || 'Loading...'}</Typography>
                     <Typography variant="body1" color="text.secondary" gutterBottom>
-                      <strong>Address:</strong> {myCafe.address}
+                      <strong>Address:</strong> {myCafe?.address || 'Loading...'}
                     </Typography>
                     <Typography variant="body1" color="text.secondary" gutterBottom>
-                      <strong>Contact:</strong> {myCafe.contactNumber || 'Not provided'}
+                      <strong>Contact:</strong> {myCafe?.contactNumber || 'Not provided'}
                     </Typography>
+                    {myCafe?.description && (
+                      <Typography variant="body1" color="text.secondary" gutterBottom>
+                        <strong>Description:</strong> {myCafe.description}
+                      </Typography>
+                    )}
                   </Box>
                   <Stack spacing={2}>
                     <Button 
                       variant="contained" 
                       component={Link} 
-                      to={`/edit-cafe/${myCafe._id}`}
+                      to={`/edit-cafe/${myCafe?._id}`}
                       startIcon={<EditIcon />}
                       size="large"
                       fullWidth
+                      disabled={!myCafe}
                     >
                       Edit Cafe Details
                     </Button>
@@ -1251,6 +1361,7 @@ const DashboardPage = () => {
                       startIcon={<DeleteIcon />}
                       size="large"
                       fullWidth
+                      disabled={!myCafe}
                     >
                       Delete Cafe
                     </Button>
@@ -1417,4 +1528,5 @@ const DashboardPage = () => {
     </Box>
   );
 };
+
 export default DashboardPage;
