@@ -20,10 +20,10 @@ const modalStyle = {
   transform: 'translate(-50%, -50%)',
   width: { xs: '95%', sm: '90%', md: '80%', lg: '70%' },
   maxWidth: 1200,
-  maxHeight: '90vh',
+  maxHeight: '85vh', // Reduced from 90vh
   bgcolor: 'background.paper',
   boxShadow: 24,
-  p: 3,
+  p: 2, // Reduced padding from 3 to 2
   borderRadius: 2,
   overflow: 'auto',
 };
@@ -39,23 +39,22 @@ const calculateRemainingTime = (sessionEndTime, sessionStartTime, duration, _tim
     const remainingMs = endTime.getTime() - now.getTime();
     const totalSessionMs = duration * 60 * 60 * 1000;
     
-    if (remainingMs <= 0) return { expired: true, text: 'Expired', percentage: 0 };
+    if (remainingMs <= 0) return { expired: true, text: 'Expired', percentage: 0, endTime };
     
-    const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-    const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
-    
-    let timeText = '';
-    if (hours > 0) timeText += `${hours}h `;
-    if (minutes > 0) timeText += `${minutes}m `;
-    if (hours === 0 && minutes < 5) timeText += `${seconds}s`;
+    // Format end time as "11:00 AM" instead of remaining time
+    const endTimeFormatted = endTime.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
     
     const percentage = Math.max(0, Math.min(100, (remainingMs / totalSessionMs) * 100));
     
     return {
       expired: false,
-      text: timeText.trim(),
-      percentage
+      text: endTimeFormatted, // Show end time instead of remaining time
+      percentage,
+      endTime
     };
   }
   
@@ -65,23 +64,22 @@ const calculateRemainingTime = (sessionEndTime, sessionStartTime, duration, _tim
     const remainingMs = endTime.getTime() - now.getTime();
     const totalSessionMs = duration * 60 * 60 * 1000; // Total duration in milliseconds
     
-    if (remainingMs <= 0) return { expired: true, text: 'Expired', percentage: 0 };
+    if (remainingMs <= 0) return { expired: true, text: 'Expired', percentage: 0, endTime };
     
-    const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-    const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
-    
-    let timeText = '';
-    if (hours > 0) timeText += `${hours}h `;
-    if (minutes > 0) timeText += `${minutes}m `;
-    if (hours === 0 && minutes < 5) timeText += `${seconds}s`; // Show seconds only for last 5 minutes
+    // Format end time as "11:00 AM" instead of remaining time
+    const endTimeFormatted = endTime.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
     
     const percentage = Math.max(0, Math.min(100, (remainingMs / totalSessionMs) * 100));
     
     return {
       expired: false,
-      text: timeText.trim(),
-      percentage
+      text: endTimeFormatted, // Show end time instead of remaining time
+      percentage,
+      endTime
     };
   }
   
@@ -352,7 +350,7 @@ const SystemManagementModal = ({
   return (
     <Modal open={open} onClose={onClose}>
       <Box sx={modalStyle}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}> {/* Reduced margin from 2 to 1.5 */}
           <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
             {mode === 'assignment' ? 'Assign Systems & Start Session' : 'System Management'}
           </Typography>
@@ -367,39 +365,45 @@ const SystemManagementModal = ({
         </Box>
 
         {mode === 'assignment' && booking && (
-          <Paper sx={{ p: 2, mb: 3, bgcolor: 'info.50' }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper sx={{ p: 1.5, mb: 2, bgcolor: 'info.50' }}> {/* Reduced padding and margin */}
+            <Typography variant="h6" gutterBottom sx={{ mb: 1 }}> {/* Reduced margin */}
               Booking Details
             </Typography>
-            <Typography variant="body2">
-              <strong>Customer:</strong> {booking.walkInCustomerName || 'Walk-in Customer'}
-            </Typography>
-            <Typography variant="body2">
-              <strong>Duration:</strong> {formatDuration(booking.duration)}
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              <strong>Systems Required:</strong>
-            </Typography>
-            {booking.systemsBooked?.map((system, index) => (
-              <Paper key={index} sx={{ p: 1, mt: 1, ml: 2, bgcolor: 'warning.50', border: '1px solid', borderColor: 'warning.main' }}>
-                <Typography variant="body2" fontWeight="bold">
-                  {system.roomType}: {system.numberOfSystems}x {system.systemType}
+            <Grid container spacing={1}> {/* Reduced spacing */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body2">
+                  <strong>Customer:</strong> {booking.walkInCustomerName || 'Walk-in Customer'}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Please select exactly {system.numberOfSystems} {system.systemType} system(s) from {system.roomType}
+                <Typography variant="body2">
+                  <strong>Duration:</strong> {formatDuration(booking.duration)}
                 </Typography>
-              </Paper>
-            ))}
-            {(!booking.systemsBooked || booking.systemsBooked.length === 0) && booking.roomType && (
-              <Paper sx={{ p: 1, mt: 1, ml: 2, bgcolor: 'warning.50', border: '1px solid', borderColor: 'warning.main' }}>
-                <Typography variant="body2" fontWeight="bold">
-                  {booking.roomType}: {booking.numberOfSystems || 1}x {booking.systemType}
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body2" sx={{ mb: 0.5 }}>
+                  <strong>Systems Required:</strong>
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Please select exactly {booking.numberOfSystems || 1} {booking.systemType} system(s) from {booking.roomType}
-                </Typography>
-              </Paper>
-            )}
+                {booking.systemsBooked?.map((system, index) => (
+                  <Paper key={index} sx={{ p: 0.5, mb: 0.5, bgcolor: 'warning.50', border: '1px solid', borderColor: 'warning.main' }}>
+                    <Typography variant="body2" fontWeight="bold">
+                      {system.roomType}: {system.numberOfSystems}x {system.systemType}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Please select exactly {system.numberOfSystems} {system.systemType} system(s) from {system.roomType}
+                    </Typography>
+                  </Paper>
+                ))}
+                {(!booking.systemsBooked || booking.systemsBooked.length === 0) && booking.roomType && (
+                  <Paper sx={{ p: 0.5, bgcolor: 'warning.50', border: '1px solid', borderColor: 'warning.main' }}>
+                    <Typography variant="body2" fontWeight="bold">
+                      {booking.roomType}: {booking.numberOfSystems || 1}x {booking.systemType}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Please select exactly {booking.numberOfSystems || 1} {booking.systemType} system(s) from {booking.roomType}
+                    </Typography>
+                  </Paper>
+                )}
+              </Grid>
+            </Grid>
           </Paper>
         )}
 
@@ -407,7 +411,7 @@ const SystemManagementModal = ({
         {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
         {/* Systems Grid */}
-        <Grid container spacing={3}>
+        <Grid container spacing={2}> {/* Reduced spacing from 3 to 2 */}
           {cafe.rooms?.filter((room) => {
             // In assignment mode, only show rooms that were selected in the booking
             if (mode === 'assignment' && booking?.systemsBooked) {
@@ -417,25 +421,25 @@ const SystemManagementModal = ({
             return true;
           }).map((room) => (
             <Grid item xs={12} lg={6} key={room.name}>
-              <Card>
+              <Card sx={{ '& .MuiCardContent-root': { py: 1.5, px: 1.5 } }}> {/* Reduced card padding */}
                 <CardContent>
-                  <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold' }}>
+                  <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold', mb: 1 }}>
                     {room.name}
                   </Typography>
                   
                   <TableContainer component={Paper} variant="outlined">
-                    <Table size="small">
+                    <Table size="small" sx={{ '& .MuiTableCell-root': { py: 1, px: 1 } }}>
                       <TableHead>
                         <TableRow>
                           {mode === 'assignment' && (
-                            <TableCell sx={{ fontWeight: 'bold' }}>Select</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', py: 1 }}>Select</TableCell>
                           )}
-                          <TableCell sx={{ fontWeight: 'bold' }}>System</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold' }}>Timer</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', py: 1 }}>System</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', py: 1 }}>Type</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', py: 1 }}>Status</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', py: 1 }}>End Time</TableCell>
                           {mode === 'management' && (
-                            <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', py: 1 }}>Actions</TableCell>
                           )}
                         </TableRow>
                       </TableHead>
@@ -502,17 +506,26 @@ const SystemManagementModal = ({
                               <TableCell>
                                 {remainingTime ? (
                                   <Box>
-                                    <Typography variant="caption" color={remainingTime.expired ? 'error' : 'text.primary'}>
+                                    <Typography 
+                                      variant="caption" 
+                                      color={remainingTime.expired ? 'error' : 'text.primary'}
+                                      title={`Session ends at ${remainingTime.text}`}
+                                    >
                                       <TimerIcon sx={{ fontSize: 14, mr: 0.5 }} />
                                       {remainingTime.text}
                                     </Typography>
                                     {!remainingTime.expired && (
-                                      <LinearProgress
-                                        variant="determinate"
-                                        value={remainingTime.percentage}
-                                        sx={{ mt: 0.5, height: 4 }}
-                                        color={remainingTime.percentage < 25 ? 'error' : 'primary'}
-                                      />
+                                      <>
+                                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                          {Math.ceil((remainingTime.endTime - new Date()) / (1000 * 60))}m remaining
+                                        </Typography>
+                                        <LinearProgress
+                                          variant="determinate"
+                                          value={remainingTime.percentage}
+                                          sx={{ mt: 0.5, height: 3 }}
+                                          color={remainingTime.percentage < 25 ? 'error' : 'primary'}
+                                        />
+                                      </>
                                     )}
                                   </Box>
                                 ) : (
@@ -566,7 +579,7 @@ const SystemManagementModal = ({
         </Grid>
 
         {/* Action Buttons */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}> {/* Reduced margin from 3 to 2 */}
           <Button onClick={onClose} size="large">
             {mode === 'assignment' ? 'Cancel' : 'Close'}
           </Button>
