@@ -37,6 +37,7 @@ const formatDuration = (hours) => {
 const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
   const [bookingType, setBookingType] = useState('single'); // 'single' or 'group'
   const [walkInCustomerName, setWalkInCustomerName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [duration, setDuration] = useState(1); // Default 1 hour
   const [systemsBooked, setSystemsBooked] = useState([
     { roomType: '', systemType: '', numberOfSystems: 1 }
@@ -48,6 +49,7 @@ const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
     if (open) {
       setBookingType('single');
       setWalkInCustomerName('');
+      setPhoneNumber('');
       setDuration(1);
       setSystemsBooked([{ roomType: '', systemType: '', numberOfSystems: 1 }]);
       setError('');
@@ -116,9 +118,14 @@ const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
     e.preventDefault();
     setError('');
 
-    // Validation - Customer name is always required now
+    // Validation - Customer name and phone number are required
     if (!walkInCustomerName.trim()) {
       setError('Customer name is required');
+      return;
+    }
+    
+    if (!phoneNumber.trim()) {
+      setError('Phone number is required');
       return;
     }
 
@@ -142,6 +149,7 @@ const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
     const bookingData = {
       bookingType,
       walkInCustomerName: walkInCustomerName.trim(), // Always include customer name
+      phoneNumber: phoneNumber.trim(), // Include phone number
       systemsBooked,
       duration,
       cafeId: myCafe._id,
@@ -192,6 +200,20 @@ const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
             onChange={(e) => setWalkInCustomerName(e.target.value)}
             placeholder={bookingType === 'group' ? "Enter group representative's name" : "Enter customer's name"}
             required={bookingType === 'group'}
+            sx={{ mt: 2 }}
+          />
+        </Paper>
+
+        {/* Phone Number Input */}
+        <Paper sx={{ p: 2, mb: 3, bgcolor: 'grey.50' }}>
+          <Typography variant="h6" gutterBottom>Phone Number</Typography>
+          <TextField
+            fullWidth
+            label="Enter Phone Number"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="e.g., +91 9876543210"
+            type="tel"
             sx={{ mt: 2 }}
           />
         </Paper>

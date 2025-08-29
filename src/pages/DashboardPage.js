@@ -815,7 +815,7 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '15%',
+                          width: '20%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11
@@ -828,7 +828,7 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '12%',
+                          width: '10%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11
@@ -841,7 +841,7 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '15%',
+                          width: '13%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11
@@ -948,6 +948,15 @@ const DashboardPage = () => {
                               <Typography variant="caption" color="text.secondary">
                                 {booking.customer ? 'Registered' : 'Walk-in'}
                               </Typography>
+                              {booking.phoneNumber && booking.phoneNumber !== 'Not provided' ? (
+                                <Typography variant="caption" color="primary.main" display="block" sx={{ mt: 0.5, fontWeight: 'bold' }}>
+                                  📞 {booking.phoneNumber}
+                                </Typography>
+                              ) : (
+                                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, fontStyle: 'italic' }}>
+                                  📞 {booking.phoneNumber === 'Not provided' ? 'No phone number' : 'Phone number not available'}
+                                </Typography>
+                              )}
                             </Box>
                           </TableCell>
                           <TableCell>
