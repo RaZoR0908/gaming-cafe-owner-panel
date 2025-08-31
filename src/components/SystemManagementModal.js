@@ -177,9 +177,11 @@ const SystemManagementModal = ({
         // Increment timer tick to force re-calculation of timers
         setTimerTick(prev => prev + 1);
         
-        // Auto-complete expired sessions
+        // Auto-complete expired sessions and refresh system status
         try {
           await cafeService.autoCompleteExpiredSessions();
+          // Also refresh system status to get updated statuses
+          await fetchSystemStatus();
         } catch (err) {
           console.error('Failed to auto-complete expired sessions:', err);
         }
@@ -549,18 +551,20 @@ const SystemManagementModal = ({
                               </TableCell>
                               
                               <TableCell>
-                                {remainingTime ? (
-                                  <Box>
-                                    <Typography 
-                                      variant="caption" 
-                                      color={remainingTime.expired ? 'error' : 'text.primary'}
-                                      title={`Session ends at ${remainingTime.text}`}
-                                    >
-                                      <TimerIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                                      {remainingTime.text}
-                                    </Typography>
-                                    {!remainingTime.expired && (
-                                      <>
+                                {(() => {
+                                  // Only show timer for Active systems
+                                  if (system.status === 'Active' && remainingTime) {
+                                    // Show active session with remaining time
+                                    return (
+                                      <Box>
+                                        <Typography 
+                                          variant="caption" 
+                                          color="text.primary"
+                                          title={`Session ends at ${remainingTime.text}`}
+                                        >
+                                          <TimerIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                                          {remainingTime.text}
+                                        </Typography>
                                         <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
                                           {Math.ceil((remainingTime.endTime - new Date()) / (1000 * 60))}m remaining
                                         </Typography>
@@ -570,14 +574,17 @@ const SystemManagementModal = ({
                                           sx={{ mt: 0.5, height: 3 }}
                                           color={remainingTime.percentage < 25 ? 'error' : 'primary'}
                                         />
-                                      </>
-                                    )}
-                                  </Box>
-                                ) : (
-                                  <Typography variant="caption" color="text.secondary">
-                                    -
-                                  </Typography>
-                                )}
+                                      </Box>
+                                    );
+                                  } else {
+                                    // For Available, Under Maintenance, or other statuses, show dash
+                                    return (
+                                      <Typography variant="caption" color="text.secondary">
+                                        -
+                                      </Typography>
+                                    );
+                                  }
+                                })()}
                               </TableCell>
                               
                               {mode === 'management' && (
