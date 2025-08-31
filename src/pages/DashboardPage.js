@@ -27,6 +27,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ComputerIcon from '@mui/icons-material/Computer';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import TimerIcon from '@mui/icons-material/Timer';
 
 
 // Helper function to format duration
@@ -48,6 +49,83 @@ const timeToHour = (timeStr) => {
   if (isPM && hourPart !== 12) hour24 += 12;
   if (!isPM && hourPart === 12) hour24 = 0;
   return hour24;
+};
+
+// Helper function to format session start time display
+const formatSessionStartTime = (sessionStartTime, status) => {
+  if (!sessionStartTime) {
+    return {
+      date: 'Not Started',
+      time: status === 'Booked' ? 'Pending' : 'N/A',
+      color: 'text.secondary'
+    };
+  }
+  
+  const sessionDate = new Date(sessionStartTime);
+  const now = new Date();
+  const isToday = sessionDate.toDateString() === now.toDateString();
+  
+  return {
+    date: isToday ? 'Today' : sessionDate.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric'
+    }),
+    time: sessionDate.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    }),
+    color: 'success.main'
+  };
+};
+
+// Helper function to check if session start time differs from booking time
+const checkTimeDifference = (booking) => {
+  if (!booking.sessionStartTime) return null;
+  
+  const sessionStart = new Date(booking.sessionStartTime);
+  const bookingDate = new Date(booking.bookingDate);
+  
+  // Extract the time from startTime string (e.g., "11:43 AM")
+  const startTimeStr = booking.startTime;
+  const [timePart, period] = startTimeStr.split(' ');
+  const [hours, minutes] = timePart.split(':');
+  
+  let bookingHour = parseInt(hours);
+  if (period === 'PM' && bookingHour !== 12) {
+    bookingHour += 12;
+  } else if (period === 'AM' && bookingHour === 12) {
+    bookingHour = 0;
+  }
+  
+  // Create the expected booking time
+  const expectedBookingTime = new Date(bookingDate);
+  expectedBookingTime.setHours(bookingHour, parseInt(minutes), 0, 0);
+  
+  // Compare with a tolerance of 5 minutes (300,000 ms)
+  const timeDiff = Math.abs(sessionStart.getTime() - expectedBookingTime.getTime());
+  const hasDifference = timeDiff > 300000; // 5 minutes tolerance
+  
+  // Debug logging
+  console.log(`Time comparison for booking:`, {
+    sessionStart: sessionStart.toLocaleString(),
+    expectedBooking: expectedBookingTime.toLocaleString(),
+    timeDiffMs: timeDiff,
+    timeDiffMinutes: Math.round(timeDiff / 60000),
+    hasDifference,
+    tolerance: '5 minutes (300,000 ms)'
+  });
+  
+  if (hasDifference) {
+    const diffMinutes = Math.round((sessionStart.getTime() - expectedBookingTime.getTime()) / 60000);
+    return {
+      hasDifference: true,
+      message: diffMinutes > 0 ? `Started ${diffMinutes}m late` : `Started ${Math.abs(diffMinutes)}m early`,
+      timeDiff: diffMinutes
+    };
+  }
+  
+  return { hasDifference: false, message: null, timeDiff: 0 };
 };
 
 const DashboardPage = () => {
@@ -779,6 +857,18 @@ const DashboardPage = () => {
                 </Button>
               </Box>
 
+              {/* Time Column Explanation */}
+              <Paper sx={{ p: 1.5, mb: 1, bgcolor: 'info.50', border: '1px solid', borderColor: 'info.main' }}>
+                <Typography variant="body2" color="info.main" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <AccessTimeIcon sx={{ fontSize: 16 }} />
+                  <strong>Date & Time:</strong> When the booking was made
+                </Typography>
+                <Typography variant="body2" color="info.main" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                  <TimerIcon sx={{ fontSize: 16 }} />
+                  <strong>Session Start:</strong> When the actual gaming session began (may differ from booking time)
+                </Typography>
+              </Paper>
+
               {/* Simple Table */}
               <TableContainer 
                 component={Paper} 
@@ -815,7 +905,7 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '20%',
+                          width: '18%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11
@@ -833,15 +923,36 @@ const DashboardPage = () => {
                           top: 0,
                           zIndex: 11
                         }}
+                        title="When the booking was made (scheduled time for mobile, booking time for walk-in)"
                       >
-                        Date & Time
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <AccessTimeIcon sx={{ fontSize: 16 }} />
+                          Date & Time
+                        </Box>
                       </TableCell>
                       <TableCell 
                         sx={{ 
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '13%',
+                          width: '12%',
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 11
+                        }}
+                        title="When the actual gaming session started (may differ from booking time)"
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <TimerIcon sx={{ fontSize: 16 }} />
+                          Session Start
+                        </Box>
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          fontWeight: 'bold', 
+                          bgcolor: 'primary.main', 
+                          color: 'white',
+                          width: '12%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11
@@ -854,7 +965,7 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '15%',
+                          width: '14%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11
@@ -970,6 +1081,30 @@ const DashboardPage = () => {
                               <Typography variant="caption" color="primary.main" fontWeight="medium">
                                 {booking.startTime}
                               </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Box>
+                              {(() => {
+                                const sessionInfo = formatSessionStartTime(booking.sessionStartTime, booking.status);
+                                const timeDiffInfo = checkTimeDifference(booking);
+                                
+                                return (
+                                  <>
+                                    <Typography variant="body2" fontWeight="bold" color={sessionInfo.color}>
+                                      {sessionInfo.date}
+                                    </Typography>
+                                    <Typography variant="caption" color={sessionInfo.color} fontWeight="medium">
+                                      {sessionInfo.time}
+                                    </Typography>
+                                    {timeDiffInfo?.hasDifference && (
+                                      <Typography variant="caption" color="warning.main" display="block" sx={{ mt: 0.5 }}>
+                                        {timeDiffInfo.message}
+                                      </Typography>
+                                    )}
+                                  </>
+                                );
+                              })()}
                             </Box>
                           </TableCell>
                           <TableCell>

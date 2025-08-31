@@ -34,6 +34,14 @@ const formatDuration = (hours) => {
   return result || '0';
 };
 
+// Helper function to format phone number display
+const formatPhoneDisplay = (phone) => {
+  if (phone.length === 0) return '';
+  if (phone.length <= 3) return phone;
+  if (phone.length <= 6) return `${phone.slice(0, 3)}-${phone.slice(3)}`;
+  return `${phone.slice(0, 3)}-${phone.slice(3, 6)}-${phone.slice(6)}`;
+};
+
 const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
   const [bookingType, setBookingType] = useState('single'); // 'single' or 'group'
   const [walkInCustomerName, setWalkInCustomerName] = useState('');
@@ -128,6 +136,11 @@ const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
       setError('Phone number is required');
       return;
     }
+    
+    if (phoneNumber.length !== 10) {
+      setError('Phone number must be exactly 10 digits');
+      return;
+    }
 
     for (const system of systemsBooked) {
       if (!system.roomType || !system.systemType) {
@@ -210,12 +223,37 @@ const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
           <TextField
             fullWidth
             label="Enter Phone Number"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder="e.g., +91 9876543210"
+            value={formatPhoneDisplay(phoneNumber)}
+            onChange={(e) => {
+              const value = e.target.value;
+              // Remove all non-digits and limit to 10 characters
+              const digitsOnly = value.replace(/\D/g, '');
+              if (digitsOnly.length <= 10) {
+                setPhoneNumber(digitsOnly);
+              }
+            }}
+
+            placeholder="Enter 10-digit phone number"
             type="tel"
+            inputProps={{
+              maxLength: 12, // Allow for dashes in display
+              pattern: '[0-9-]{12}'
+            }}
+            helperText={
+              phoneNumber.length === 0 
+                ? 'Enter 10-digit phone number' 
+                : phoneNumber.length === 10 
+                  ? '✓ Valid phone number' 
+                  : `${phoneNumber.length}/10 digits - ${10 - phoneNumber.length} more needed`
+            }
+            error={phoneNumber.length > 0 && phoneNumber.length !== 10}
             sx={{ mt: 2 }}
           />
+          {phoneNumber.length > 0 && (
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              Raw input: {phoneNumber}
+            </Typography>
+          )}
         </Paper>
 
         {/* Duration Selection */}
