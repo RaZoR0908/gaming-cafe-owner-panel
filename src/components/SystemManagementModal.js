@@ -123,10 +123,7 @@ const SystemManagementModal = ({
     
     setRefreshing(true);
     try {
-      // Auto-complete expired sessions first
-      await cafeService.autoCompleteExpiredSessions();
-      
-      // Then fetch current cafe status
+      // Fetch current cafe status
       const cafe = await cafeService.getMyCafe();
       
       // Also fetch current bookings to get session timing details
@@ -158,6 +155,25 @@ const SystemManagementModal = ({
     }
   }, [myCafe?._id]);
 
+  // Manual refresh with auto-complete for expired sessions
+  const handleManualRefresh = useCallback(async () => {
+    if (!myCafe?._id) return;
+    
+    setRefreshing(true);
+    try {
+      // Auto-complete expired sessions first
+      await cafeService.autoCompleteExpiredSessions();
+      
+      // Then fetch updated system status
+      await fetchSystemStatus();
+    } catch (err) {
+      console.error('Failed to refresh system status:', err);
+      setError('Failed to refresh system status');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [myCafe?._id, fetchSystemStatus]);
+
   // State to force timer re-renders
   const [timerTick, setTimerTick] = useState(0);
 
@@ -169,22 +185,13 @@ const SystemManagementModal = ({
       setSuccess('');
       fetchSystemStatus();
       
-      // Set up auto-refresh every 30 seconds for full data
-      const refreshInterval = setInterval(fetchSystemStatus, 30000);
+      // Set up lightweight periodic refresh every 60 seconds instead of continuous refresh
+      const refreshInterval = setInterval(fetchSystemStatus, 60000);
       
-      // Set up timer update every second for live countdown
-      const timerInterval = setInterval(async () => {
+      // Set up timer update every second for live countdown (only for active systems)
+      const timerInterval = setInterval(() => {
         // Increment timer tick to force re-calculation of timers
         setTimerTick(prev => prev + 1);
-        
-        // Auto-complete expired sessions and refresh system status
-        try {
-          await cafeService.autoCompleteExpiredSessions();
-          // Also refresh system status to get updated statuses
-          await fetchSystemStatus();
-        } catch (err) {
-          console.error('Failed to auto-complete expired sessions:', err);
-        }
       }, 1000);
       
       return () => {
@@ -326,9 +333,42 @@ const SystemManagementModal = ({
     setError('');
     
     try {
-      await cafeService.endSession(bookingId);
+      const response = await cafeService.endSession(bookingId);
       setSuccess('Session ended successfully!');
-      await fetchSystemStatus();
+      
+      // Update local state immediately using the response
+      if (response && response.data && response.data.updatedSystems) {
+        setSystemStatus(prevCafe => {
+          if (!prevCafe) return prevCafe;
+          
+          const updatedCafe = { ...prevCafe };
+          
+          // Update each system that was freed
+          response.data.updatedSystems.forEach(updatedSystem => {
+            updatedCafe.rooms.forEach(room => {
+              if (room.name === updatedSystem.roomType) {
+                room.systems.forEach(system => {
+                  if (system.systemId === updatedSystem.systemId) {
+                    system.status = updatedSystem.status;
+                    system.activeBooking = null;
+                    system.sessionStartTime = null;
+                    system.sessionEndTime = null;
+                    system.sessionDuration = null;
+                  }
+                });
+              }
+            });
+          });
+          
+          return updatedCafe;
+        });
+      } else if (response && response.data && response.data.cafe) {
+        // If no updatedSystems but cafe object is returned, use the full cafe object
+        setSystemStatus(response.data.cafe);
+      } else {
+        // Fallback: refresh system status if response doesn't contain updated systems
+        await fetchSystemStatus();
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to end session');
     } finally {
@@ -346,9 +386,16 @@ const SystemManagementModal = ({
     setError('');
     
     try {
-      await cafeService.updateSystemMaintenanceStatus(myCafe._id, roomName, systemId, newStatus);
+      const response = await cafeService.updateSystemMaintenanceStatus(myCafe._id, roomName, systemId, newStatus);
       setSuccess(`System ${systemId} set to ${newStatus}`);
-      await fetchSystemStatus();
+      
+      // Update local state immediately using the response
+      if (response && response.data) {
+        setSystemStatus(response.data);
+      } else {
+        // Fallback: refresh system status if response doesn't contain updated cafe
+        await fetchSystemStatus();
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update system status');
     } finally {
@@ -391,13 +438,20 @@ const SystemManagementModal = ({
           </Typography>
           <Button 
             variant="outlined" 
-            onClick={fetchSystemStatus} 
+            onClick={handleManualRefresh} 
             disabled={refreshing}
             startIcon={refreshing ? <CircularProgress size={20} /> : null}
           >
             {refreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
         </Box>
+
+        {mode === 'management' && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            <strong>System Management:</strong> End active sessions manually or use Refresh to sync expired sessions. 
+            Available systems show "-" instead of expired timers. Auto-refresh occurs every 60 seconds.
+          </Alert>
+        )}
 
         {mode === 'assignment' && booking && (
           <Paper sx={{ p: 1.5, mb: 2, bgcolor: 'info.50' }}> {/* Reduced padding and margin */}
@@ -576,8 +630,15 @@ const SystemManagementModal = ({
                                         />
                                       </Box>
                                     );
+                                  } else if (system.status === 'Available') {
+                                    // For Available systems, show dash instead of expired timer
+                                    return (
+                                      <Typography variant="caption" color="text.secondary">
+                                        -
+                                      </Typography>
+                                    );
                                   } else {
-                                    // For Available, Under Maintenance, or other statuses, show dash
+                                    // For Under Maintenance or other statuses, show dash
                                     return (
                                       <Typography variant="caption" color="text.secondary">
                                         -
