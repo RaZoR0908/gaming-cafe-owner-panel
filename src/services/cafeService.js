@@ -131,6 +131,26 @@ const updateSystemMaintenanceStatus = async (cafeId, roomName, systemId, status)
   return response.data;
 };
 
+const verifyOTP = async (bookingId, otp) => {
+  const config = { headers: getAuthHeader() };
+  const response = await axios.post(
+    BOOKING_API_URL + 'verify-otp-only',
+    { bookingId, otp },
+    config
+  );
+  return response.data;
+};
+
+const verifyOTPAndStartSession = async (bookingId, otp, systemAssignments) => {
+  const config = { headers: getAuthHeader() };
+  const response = await axios.post(
+    BOOKING_API_URL + 'verify-otp',
+    { bookingId, otp, systemAssignments },
+    config
+  );
+  return response.data;
+};
+
 const cafeService = {
   getAllCafes,
   getMyCafe,
@@ -148,6 +168,8 @@ const cafeService = {
   getAvailableSystemsForAssignment,
   autoCompleteExpiredSessions,
   updateSystemMaintenanceStatus,
+  verifyOTP,
+  verifyOTPAndStartSession,
 };
 
 export default cafeService;

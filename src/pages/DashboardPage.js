@@ -4,6 +4,7 @@ import cafeService from '../services/cafeService';
 import WalkInBookingModal from '../components/WalkInBookingModal';
 import SystemManagementModal from '../components/SystemManagementModal';
 import ExtendSessionModal from '../components/ExtendSessionModal';
+import OTPVerificationModal from '../components/OTPVerificationModal';
 
 // --- Material-UI Imports ---
 import {
@@ -158,6 +159,8 @@ const DashboardPage = () => {
   const [isExtendModalOpen, setExtendModalOpen] = useState(false);
   const [selectedBookingForExtend, setSelectedBookingForExtend] = useState(null);
   const [isTipsModalOpen, setTipsModalOpen] = useState(false);
+  const [isOTPModalOpen, setOTPModalOpen] = useState(false);
+  const [selectedBookingForOTP, setSelectedBookingForOTP] = useState(null);
 
   const navigate = useNavigate();
 
@@ -475,13 +478,43 @@ const DashboardPage = () => {
   // Handle start session for booked bookings
   const handleStartSession = (booking) => {
     console.log('🎯 START button clicked for booking:', booking);
-    console.log('🔍 Setting selected booking:', booking);
-    console.log('🔍 Setting mode to assignment');
-    setSelectedBookingForAssignment(booking);
-    setSystemManagementMode('assignment');
-    console.log('🔍 Opening system management modal');
-    setSystemManagementModalOpen(true);
-    console.log('🔍 Modal state should now be open');
+    
+    // Check if this is a mobile booking (has OTP)
+    if (booking.otp) {
+      console.log('🔍 Mobile booking detected - opening OTP verification modal');
+      setSelectedBookingForOTP(booking);
+      setOTPModalOpen(true);
+    } else {
+      console.log('🔍 Walk-in booking detected - opening system assignment modal');
+      setSelectedBookingForAssignment(booking);
+      setSystemManagementMode('assignment');
+      setSystemManagementModalOpen(true);
+    }
+  };
+
+  // Handle OTP verification
+  const handleOTPVerified = async (otp) => {
+    if (!selectedBookingForOTP) return;
+
+    try {
+      // Verify OTP first (without starting session)
+      const response = await cafeService.verifyOTP(selectedBookingForOTP._id, otp);
+      
+      if (response.success) {
+        // OTP is valid, close OTP modal and open system selection modal
+        setOTPModalOpen(false);
+        setSelectedBookingForOTP(null);
+        
+        // Set the booking for system assignment
+        setSelectedBookingForAssignment(selectedBookingForOTP);
+        setSystemManagementMode('assignment');
+        setSystemManagementModalOpen(true);
+        
+        setSuccess('OTP verified! Please select systems to assign.');
+      }
+    } catch (err) {
+      throw err; // Let the modal handle the error
+    }
   };
 
   if (loading) {
@@ -1057,7 +1090,7 @@ const DashboardPage = () => {
                                 {booking.customer ? booking.customer.name : (booking.walkInCustomerName || 'Walk-in Customer')}
                               </Typography>
                               <Typography variant="caption" color="text.secondary">
-                                {booking.customer ? 'Registered' : 'Walk-in'}
+                                {booking.customer ? 'Mobile Booking' : 'Walk-in'}
                               </Typography>
                               {booking.phoneNumber && booking.phoneNumber !== 'Not provided' ? (
                                 <Typography variant="caption" color="primary.main" display="block" sx={{ mt: 0.5, fontWeight: 'bold' }}>
@@ -1610,6 +1643,17 @@ const DashboardPage = () => {
         }}
         booking={selectedBookingForExtend}
         onExtend={handleExtendSubmit}
+      />
+
+      {/* OTP Verification Modal */}
+      <OTPVerificationModal
+        open={isOTPModalOpen}
+        onClose={() => {
+          setOTPModalOpen(false);
+          setSelectedBookingForOTP(null);
+        }}
+        booking={selectedBookingForOTP}
+        onOTPVerified={handleOTPVerified}
       />
 
       {/* Tips & Help Modal */}
