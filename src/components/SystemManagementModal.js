@@ -40,7 +40,16 @@ const calculateRemainingTime = (sessionEndTime, sessionStartTime, duration, _tim
     const remainingMs = endTime.getTime() - now.getTime();
     const totalSessionMs = duration * 60 * 60 * 1000;
     
-    if (remainingMs <= 0) return { expired: true, text: 'Expired', percentage: 0, endTime };
+    // If session has expired, return expired status
+    if (remainingMs <= 0) {
+      return { 
+        expired: true, 
+        text: 'Expired', 
+        percentage: 0, 
+        endTime,
+        remainingMinutes: 0
+      };
+    }
     
     // Format end time as "11:00 AM" instead of remaining time
     const endTimeFormatted = endTime.toLocaleTimeString('en-US', { 
@@ -50,12 +59,14 @@ const calculateRemainingTime = (sessionEndTime, sessionStartTime, duration, _tim
     });
     
     const percentage = Math.max(0, Math.min(100, (remainingMs / totalSessionMs) * 100));
+    const remainingMinutes = Math.ceil(remainingMs / (1000 * 60));
     
     return {
       expired: false,
       text: endTimeFormatted, // Show end time instead of remaining time
       percentage,
-      endTime
+      endTime,
+      remainingMinutes
     };
   }
   
@@ -65,7 +76,16 @@ const calculateRemainingTime = (sessionEndTime, sessionStartTime, duration, _tim
     const remainingMs = endTime.getTime() - now.getTime();
     const totalSessionMs = duration * 60 * 60 * 1000; // Total duration in milliseconds
     
-    if (remainingMs <= 0) return { expired: true, text: 'Expired', percentage: 0, endTime };
+    // If session has expired, return expired status
+    if (remainingMs <= 0) {
+      return { 
+        expired: true, 
+        text: 'Expired', 
+        percentage: 0, 
+        endTime,
+        remainingMinutes: 0
+      };
+    }
     
     // Format end time as "11:00 AM" instead of remaining time
     const endTimeFormatted = endTime.toLocaleTimeString('en-US', { 
@@ -75,12 +95,14 @@ const calculateRemainingTime = (sessionEndTime, sessionStartTime, duration, _tim
     });
     
     const percentage = Math.max(0, Math.min(100, (remainingMs / totalSessionMs) * 100));
+    const remainingMinutes = Math.ceil(remainingMs / (1000 * 60));
     
     return {
       expired: false,
       text: endTimeFormatted, // Show end time instead of remaining time
       percentage,
-      endTime
+      endTime,
+      remainingMinutes
     };
   }
   
@@ -160,9 +182,21 @@ const SystemManagementModal = ({
     if (!myCafe?._id) return;
     
     setRefreshing(true);
+    setError('');
+    setSuccess('');
+    
     try {
       // Auto-complete expired sessions first
-      await cafeService.autoCompleteExpiredSessions();
+      const response = await cafeService.autoCompleteExpiredSessions();
+      
+      if (response && response.data) {
+        const { completedBookings, systemUpdatesCount } = response.data;
+        if (completedBookings && completedBookings.length > 0) {
+          setSuccess(`Auto-completed ${completedBookings.length} expired sessions and freed ${systemUpdatesCount} systems`);
+        } else {
+          setSuccess('No expired sessions found - all systems are up to date');
+        }
+      }
       
       // Then fetch updated system status
       await fetchSystemStatus();
@@ -608,28 +642,54 @@ const SystemManagementModal = ({
                                 {(() => {
                                   // Only show timer for Active systems
                                   if (system.status === 'Active' && remainingTime) {
-                                    // Show active session with remaining time
-                                    return (
-                                      <Box>
-                                        <Typography 
-                                          variant="caption" 
-                                          color="text.primary"
-                                          title={`Session ends at ${remainingTime.text}`}
-                                        >
-                                          <TimerIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                                          {remainingTime.text}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                                          {Math.ceil((remainingTime.endTime - new Date()) / (1000 * 60))}m remaining
-                                        </Typography>
-                                        <LinearProgress
-                                          variant="determinate"
-                                          value={remainingTime.percentage}
-                                          sx={{ mt: 0.5, height: 3 }}
-                                          color={remainingTime.percentage < 25 ? 'error' : 'primary'}
-                                        />
-                                      </Box>
-                                    );
+                                    // Check if session has expired
+                                    if (remainingTime.expired) {
+                                      // Session has expired, show expired status
+                                      return (
+                                        <Box>
+                                          <Typography 
+                                            variant="caption" 
+                                            color="error.main"
+                                            fontWeight="bold"
+                                          >
+                                            <TimerIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                                            Expired
+                                          </Typography>
+                                          <Typography variant="caption" color="error.main" display="block" sx={{ mt: 0.5 }}>
+                                            Session ended
+                                          </Typography>
+                                          <LinearProgress
+                                            variant="determinate"
+                                            value={0}
+                                            sx={{ mt: 0.5, height: 3 }}
+                                            color="error"
+                                          />
+                                        </Box>
+                                      );
+                                    } else {
+                                      // Show active session with remaining time
+                                      return (
+                                        <Box>
+                                          <Typography 
+                                            variant="caption" 
+                                            color="text.primary"
+                                            title={`Session ends at ${remainingTime.text}`}
+                                          >
+                                            <TimerIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                                            {remainingTime.text}
+                                          </Typography>
+                                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                            {remainingTime.remainingMinutes}m remaining
+                                          </Typography>
+                                          <LinearProgress
+                                            variant="determinate"
+                                            value={remainingTime.percentage}
+                                            sx={{ mt: 0.5, height: 3 }}
+                                            color={remainingTime.percentage < 25 ? 'error' : 'primary'}
+                                          />
+                                        </Box>
+                                      );
+                                    }
                                   } else if (system.status === 'Available') {
                                     // For Available systems, show dash instead of expired timer
                                     return (
