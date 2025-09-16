@@ -341,22 +341,9 @@ const DashboardPage = () => {
     const todayBookings = validBookings.filter(b => b.bookingDate.startsWith(today));
     
     // Active bookings: exclude cancelled and permanently cancelled bookings
-    const activeBookings = validBookings.filter(b => {
-      const isActive = ['Booked', 'Confirmed', 'Active'].includes(b.status) && !b.permanentlyCancelled;
-      
-      // Debug: Log booking details for troubleshooting
-      if (b.walkInCustomerName === 'harry' || (b.customer && b.customer.name === 'harry')) {
-        console.log('🔍 Harry booking debug:', {
-          id: b._id,
-          customer: b.walkInCustomerName || b.customer?.name,
-          status: b.status,
-          permanentlyCancelled: b.permanentlyCancelled,
-          isActive: isActive
-        });
-      }
-      
-      return isActive;
-    });
+    const activeBookings = validBookings.filter(b => 
+      ['Booked', 'Confirmed', 'Active'].includes(b.status) && !b.permanentlyCancelled
+    );
     
     // Total revenue: only count completed bookings
     const completedBookings = validBookings.filter(b => b.status === 'Completed');
