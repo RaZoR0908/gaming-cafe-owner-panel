@@ -339,14 +339,40 @@ const DashboardPage = () => {
     const today = new Date().toISOString().split('T')[0];
     const validBookings = allBookings.filter(b => b && b.bookingDate && b.status); // Filter out invalid bookings
     const todayBookings = validBookings.filter(b => b.bookingDate.startsWith(today));
-    const activeBookings = validBookings.filter(b => ['Booked', 'Confirmed', 'Active'].includes(b.status));
-    const totalRevenue = validBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+    
+    // Active bookings: exclude cancelled and permanently cancelled bookings
+    const activeBookings = validBookings.filter(b => {
+      const isActive = ['Booked', 'Confirmed', 'Active'].includes(b.status) && !b.permanentlyCancelled;
+      
+      // Debug: Log booking details for troubleshooting
+      if (b.walkInCustomerName === 'harry' || (b.customer && b.customer.name === 'harry')) {
+        console.log('🔍 Harry booking debug:', {
+          id: b._id,
+          customer: b.walkInCustomerName || b.customer?.name,
+          status: b.status,
+          permanentlyCancelled: b.permanentlyCancelled,
+          isActive: isActive
+        });
+      }
+      
+      return isActive;
+    });
+    
+    // Total revenue: only count completed bookings
+    const completedBookings = validBookings.filter(b => b.status === 'Completed');
+    const totalRevenue = completedBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+    
+    // Daily revenue: only count today's completed bookings
+    const todayCompletedBookings = completedBookings.filter(b => b.bookingDate.startsWith(today));
+    const dailyRevenue = todayCompletedBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+    
     const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : 0;
     
     return {
       todayBookings: todayBookings.length,
       confirmedBookings: activeBookings.length,
       totalRevenue,
+      dailyRevenue,
       averageRating,
       totalReviews: reviews.length
     };
@@ -710,7 +736,8 @@ const DashboardPage = () => {
 
         {/* Quick Stats */}
         <Grid container spacing={2} sx={{ mb: 1.5 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          {/* First Row - 2 cards */}
+          <Grid item xs={12} sm={6} md={6}>
             <Card sx={{ bgcolor: '#e3f2fd', borderLeft: '4px solid #1976d2' }}>
               <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -725,7 +752,7 @@ const DashboardPage = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={6}>
             <Card sx={{ bgcolor: '#f3e5f5', borderLeft: '4px solid #9c27b0' }}>
               <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -740,7 +767,9 @@ const DashboardPage = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          
+          {/* Second Row - 3 cards */}
+          <Grid item xs={12} sm={4} md={4}>
             <Card sx={{ bgcolor: '#e8f5e8', borderLeft: '4px solid #388e3c' }}>
               <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -748,14 +777,29 @@ const DashboardPage = () => {
                     <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#388e3c', mb: 0.5 }}>
                       ₹{stats.totalRevenue.toLocaleString()}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">Total Revenue</Typography>
+                    <Typography variant="caption" color="text.secondary">Total Revenue (Completed)</Typography>
                   </Box>
                   <TrendingUpIcon sx={{ fontSize: 32, color: '#388e3c', opacity: 0.7 }} />
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={4} md={4}>
+            <Card sx={{ bgcolor: '#e0f2f1', borderLeft: '4px solid #00796b' }}>
+              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#00796b', mb: 0.5 }}>
+                      ₹{stats.dailyRevenue.toLocaleString()}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">Today's Revenue</Typography>
+                  </Box>
+                  <TrendingUpIcon sx={{ fontSize: 32, color: '#00796b', opacity: 0.7 }} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={4} md={4}>
             <Card sx={{ bgcolor: '#fff3e0', borderLeft: '4px solid #f57c00' }}>
               <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -928,10 +972,12 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '5%',
+                          width: '3%',
+                          textAlign: 'center',
                           position: 'sticky',
                           top: 0,
-                          zIndex: 11
+                          zIndex: 11,
+                          minWidth: '40px'
                         }}
                       >
                         #
@@ -941,10 +987,11 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '18%',
+                          width: '14%',
                           position: 'sticky',
                           top: 0,
-                          zIndex: 11
+                          zIndex: 11,
+                          minWidth: '120px'
                         }}
                       >
                         Customer
@@ -954,10 +1001,11 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '10%',
+                          width: '9%',
                           position: 'sticky',
                           top: 0,
-                          zIndex: 11
+                          zIndex: 11,
+                          minWidth: '90px'
                         }}
                         title="When the booking was made (scheduled time for mobile, booking time for walk-in)"
                       >
@@ -971,10 +1019,11 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '12%',
+                          width: '9%',
                           position: 'sticky',
                           top: 0,
-                          zIndex: 11
+                          zIndex: 11,
+                          minWidth: '90px'
                         }}
                         title="When the actual gaming session started (may differ from booking time)"
                       >
@@ -988,10 +1037,11 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '12%',
+                          width: '11%',
                           position: 'sticky',
                           top: 0,
-                          zIndex: 11
+                          zIndex: 11,
+                          minWidth: '100px'
                         }}
                       >
                         Room/System
@@ -1001,10 +1051,11 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '14%',
+                          width: '11%',
                           position: 'sticky',
                           top: 0,
-                          zIndex: 11
+                          zIndex: 11,
+                          minWidth: '100px'
                         }}
                       >
                         Systems
@@ -1014,10 +1065,12 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '8%',
+                          width: '7%',
                           position: 'sticky',
                           top: 0,
-                          zIndex: 11
+                          zIndex: 11,
+                          minWidth: '70px',
+                          textAlign: 'center'
                         }}
                       >
                         Duration
@@ -1027,10 +1080,12 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '10%',
+                          width: '8%',
                           position: 'sticky',
                           top: 0,
-                          zIndex: 11
+                          zIndex: 11,
+                          minWidth: '80px',
+                          textAlign: 'right'
                         }}
                       >
                         Price
@@ -1040,10 +1095,12 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '10%',
+                          width: '9%',
                           position: 'sticky',
                           top: 0,
-                          zIndex: 11
+                          zIndex: 11,
+                          minWidth: '90px',
+                          textAlign: 'center'
                         }}
                       >
                         Status
@@ -1054,10 +1111,11 @@ const DashboardPage = () => {
                           bgcolor: 'primary.main', 
                           color: 'white',
                           textAlign: 'center',
-                          width: '10%',
+                          width: '11%',
                           position: 'sticky',
                           top: 0,
-                          zIndex: 11
+                          zIndex: 11,
+                          minWidth: '100px'
                         }}
                       >
                         Actions
@@ -1084,42 +1142,42 @@ const DashboardPage = () => {
 
                       return (
                         <TableRow key={booking._id} hover>
-                          <TableCell sx={{ textAlign: 'center', fontWeight: 'bold', color: 'primary.main' }}>
+                          <TableCell sx={{ textAlign: 'center', fontWeight: 'bold', color: 'primary.main', verticalAlign: 'top' }}>
                             {index + 1}
                           </TableCell>
-                          <TableCell>
+                          <TableCell sx={{ verticalAlign: 'top' }}>
                             <Box>
-                              <Typography variant="body2" fontWeight="bold">
+                              <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.25, fontSize: '0.875rem' }}>
                                 {booking.customer ? booking.customer.name : (booking.walkInCustomerName || 'Walk-in Customer')}
                               </Typography>
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25, fontSize: '0.75rem' }}>
                                 {booking.customer ? 'Mobile Booking' : 'Walk-in'}
                               </Typography>
                               {booking.phoneNumber && booking.phoneNumber !== 'Not provided' ? (
-                                <Typography variant="caption" color="primary.main" display="block" sx={{ mt: 0.5, fontWeight: 'bold' }}>
+                                <Typography variant="caption" color="primary.main" display="block" sx={{ fontWeight: 'bold' }}>
                                   📞 {booking.phoneNumber}
                                 </Typography>
                               ) : (
-                                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, fontStyle: 'italic' }}>
+                                <Typography variant="caption" color="text.secondary" display="block" sx={{ fontStyle: 'italic' }}>
                                   📞 {booking.phoneNumber === 'Not provided' ? 'No phone number' : 'Phone number not available'}
                                 </Typography>
                               )}
                             </Box>
                           </TableCell>
-                          <TableCell>
+                          <TableCell sx={{ verticalAlign: 'top' }}>
                             <Box>
-                              <Typography variant="body2" fontWeight="bold">
+                              <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.25, fontSize: '0.875rem' }}>
                                 {new Date(booking.bookingDate).toLocaleDateString('en-US', { 
                                   month: 'short', 
                                   day: 'numeric'
                                 })}
                               </Typography>
-                              <Typography variant="caption" color="primary.main" fontWeight="medium">
+                              <Typography variant="caption" color="primary.main" fontWeight="medium" sx={{ fontSize: '0.75rem' }}>
                                 {booking.startTime}
                               </Typography>
                             </Box>
                           </TableCell>
-                          <TableCell>
+                          <TableCell sx={{ verticalAlign: 'top' }}>
                             <Box>
                               {(() => {
                                 const sessionInfo = formatSessionStartTime(booking.sessionStartTime, booking.status);
@@ -1127,14 +1185,14 @@ const DashboardPage = () => {
                                 
                                 return (
                                   <>
-                                    <Typography variant="body2" fontWeight="bold" color={sessionInfo.color}>
+                                    <Typography variant="body2" fontWeight="bold" color={sessionInfo.color} sx={{ mb: 0.5 }}>
                                       {sessionInfo.date}
                                     </Typography>
-                                    <Typography variant="caption" color={sessionInfo.color} fontWeight="medium">
+                                    <Typography variant="caption" color={sessionInfo.color} fontWeight="medium" sx={{ display: 'block', mb: 0.5 }}>
                                       {sessionInfo.time}
                                     </Typography>
                                     {timeDiffInfo?.hasDifference && (
-                                      <Typography variant="caption" color="warning.main" display="block" sx={{ mt: 0.5 }}>
+                                      <Typography variant="caption" color="warning.main" display="block">
                                         {timeDiffInfo.message}
                                       </Typography>
                                     )}
@@ -1143,14 +1201,14 @@ const DashboardPage = () => {
                               })()}
                             </Box>
                           </TableCell>
-                          <TableCell>
+                          <TableCell sx={{ verticalAlign: 'top' }}>
                             <Box>
                               {/* Handle both old and new booking formats */}
                               {booking.systemsBooked && booking.systemsBooked.length > 0 ? (
                                 // New format with multiple systems
                                 booking.systemsBooked.map((system, index) => (
-                                  <Box key={index} sx={{ mb: index < booking.systemsBooked.length - 1 ? 0.5 : 0 }}>
-                                    <Typography variant="body2" fontWeight="bold" color="success.main">
+                                  <Box key={index} sx={{ mb: index < booking.systemsBooked.length - 1 ? 1 : 0 }}>
+                                    <Typography variant="body2" fontWeight="bold" color="success.main" sx={{ mb: 0.25 }}>
                                       {system.roomType}
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary">
@@ -1161,7 +1219,7 @@ const DashboardPage = () => {
                               ) : (
                                 // Old format fallback
                                 <Box>
-                                  <Typography variant="body2" fontWeight="bold" color="success.main">
+                                  <Typography variant="body2" fontWeight="bold" color="success.main" sx={{ mb: 0.25 }}>
                                     {booking.roomType || 'N/A'}
                                   </Typography>
                                   <Typography variant="caption" color="text.secondary">
@@ -1171,26 +1229,27 @@ const DashboardPage = () => {
                               )}
                             </Box>
                           </TableCell>
-                          <TableCell>
+                          <TableCell sx={{ verticalAlign: 'top' }}>
                             {/* Assigned Systems Column */}
                             {booking.assignedSystems && booking.assignedSystems.length > 0 ? (
                               <Box>
-                                {booking.assignedSystems.map((system, index) => (
-                                  <Chip
-                                    key={index}
-                                    label={system.systemId}
-                                    size="small"
-                                    variant="outlined"
-                                    color={booking.status === 'Active' ? 'success' : 'default'}
-                                    sx={{ 
-                                      mr: 0.5, 
-                                      mb: 0.5,
-                                      fontSize: '0.75rem',
-                                      fontFamily: 'monospace'
-                                    }}
-                                  />
-                                ))}
-                                <Typography variant="caption" color="text.secondary" display="block">
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 0.5 }}>
+                                  {booking.assignedSystems.map((system, index) => (
+                                    <Chip
+                                      key={index}
+                                      label={system.systemId}
+                                      size="small"
+                                      variant="outlined"
+                                      color={booking.status === 'Active' ? 'success' : 'default'}
+                                      sx={{ 
+                                        fontSize: '0.75rem',
+                                        fontFamily: 'monospace',
+                                        height: '24px'
+                                      }}
+                                    />
+                                  ))}
+                                </Box>
+                                <Typography variant="caption" color="text.secondary">
                                   {booking.assignedSystems.length} system(s)
                                 </Typography>
                               </Box>
@@ -1200,8 +1259,8 @@ const DashboardPage = () => {
                               </Typography>
                             )}
                           </TableCell>
-                          <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
                               <AccessTimeIcon fontSize="small" color="primary" />
                               <Chip
                                 label={formatDuration(booking.duration)}
@@ -1212,19 +1271,17 @@ const DashboardPage = () => {
                               />
                             </Box>
                           </TableCell>
-                          <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Typography 
-                                variant="h6" 
-                                fontWeight="bold" 
-                                color="success.main"
-                                sx={{ fontFamily: 'monospace' }}
-                              >
-                                ₹{booking.totalPrice?.toLocaleString() || '0'}
-                              </Typography>
-                            </Box>
+                          <TableCell sx={{ textAlign: 'right', verticalAlign: 'top' }}>
+                            <Typography 
+                              variant="h6" 
+                              fontWeight="bold" 
+                              color="success.main"
+                              sx={{ fontFamily: 'monospace' }}
+                            >
+                              ₹{booking.totalPrice?.toLocaleString() || '0'}
+                            </Typography>
                           </TableCell>
-                          <TableCell>
+                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top' }}>
                             <Chip 
                               label={booking.permanentlyCancelled ? 'Permanently Cancelled' : booking.status}
                               icon={
@@ -1252,8 +1309,8 @@ const DashboardPage = () => {
                               }}
                             />
                           </TableCell>
-                          <TableCell align="center">
-                            <Stack direction="column" spacing={0.5} alignItems="center">
+                          <TableCell align="center" sx={{ verticalAlign: 'top' }}>
+                            <Stack direction="column" spacing={0.25} alignItems="center" sx={{ minHeight: '50px', justifyContent: 'flex-start', pt: 0.5 }}>
                               {booking.status === 'Booked' && (
                                 <>
                                   <Button 
@@ -1261,7 +1318,14 @@ const DashboardPage = () => {
                                     variant="contained" 
                                     color="primary"
                                     onClick={() => handleStartSession(booking)}
-                                    sx={{ mb: 0.5 }}
+                                    sx={{ 
+                                      mb: 0.5, 
+                                      fontSize: '0.7rem', 
+                                      py: 0.125, 
+                                      px: 0.75, 
+                                      minWidth: '60px',
+                                      height: '24px'
+                                    }}
                                   >
                                     Start
                                   </Button>
