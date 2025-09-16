@@ -42,6 +42,12 @@ const deleteCafe = async (id) => {
   return response.data;
 };
 
+const toggleCafeStatus = async (id) => {
+  const config = { headers: getAuthHeader() };
+  const response = await axios.patch(CAFE_API_URL + id + '/toggle-status', {}, config);
+  return response.data;
+};
+
 // --- Booking Functions ---
 const getOwnerBookings = async (cafeId) => {
   const config = { headers: getAuthHeader() };
@@ -158,6 +164,7 @@ const cafeService = {
   getCafeById,
   updateCafe,
   deleteCafe,
+  toggleCafeStatus,
   getOwnerBookings,
   updateBookingStatus,
   extendBooking,

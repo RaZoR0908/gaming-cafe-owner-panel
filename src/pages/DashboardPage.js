@@ -11,7 +11,7 @@ import {
   AppBar, Toolbar, Typography, Button, Container, Box, Card, CardContent,
   Grid, CircularProgress, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Chip, TextField, Alert, IconButton,
-  Rating,  Avatar,  Stack, Tooltip, Modal
+  Rating,  Avatar,  Stack, Tooltip, Modal, Switch, FormControlLabel
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -425,6 +425,18 @@ const DashboardPage = () => {
     }
   };
 
+  const handleToggleCafeStatus = async () => {
+    if (!myCafe) return;
+    
+    try {
+      const result = await cafeService.toggleCafeStatus(myCafe._id);
+      setMyCafe(prev => ({ ...prev, isOpen: result.cafe.isOpen }));
+      setSuccess(result.message);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update cafe status');
+    }
+  };
+
   const handleExtendBooking = (booking) => {
     setSelectedBookingForExtend(booking);
     setExtendModalOpen(true);
@@ -828,6 +840,42 @@ const DashboardPage = () => {
                       <strong>Description:</strong> {myCafe.description}
                     </Typography>
                   )}
+                  
+                  {/* Cafe Open/Close Toggle */}
+                  <Box 
+                    sx={{ 
+                      mt: 2, 
+                      mb: 2, 
+                      p: 1.5, 
+                      bgcolor: myCafe?.isOpen ? '#e8f5e8' : '#ffebee', 
+                      borderRadius: 1,
+                      border: `1px solid ${myCafe?.isOpen ? '#4caf50' : '#f44336'}`
+                    }}
+                  >
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={myCafe?.isOpen ?? true}
+                          onChange={handleToggleCafeStatus}
+                          disabled={!myCafe}
+                          color="primary"
+                          size="medium"
+                        />
+                      }
+                      label={
+                        <Typography 
+                          variant="body1" 
+                          sx={{ 
+                            fontWeight: 'bold',
+                            color: myCafe?.isOpen ? '#2e7d32' : '#d32f2f'
+                          }}
+                        >
+                          Cafe Status: {myCafe?.isOpen ? 'OPEN' : 'CLOSED'}
+                        </Typography>
+                      }
+                    />
+                  </Box>
+                  
                   <Box sx={{ mt: 2 }}>
                     <Button 
                       variant="contained" 
@@ -1556,8 +1604,8 @@ const DashboardPage = () => {
 
         {/* Cafe Settings */}
         {currentView === 'cafe' && (
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+          <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            <Box sx={{ flex: '1 1 45%', minWidth: '400px' }}>
               <Card>
                 <CardContent>
                   <Typography variant="h5" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
@@ -1604,8 +1652,8 @@ const DashboardPage = () => {
                   </Stack>
                 </CardContent>
               </Card>
-            </Grid>
-            <Grid item xs={12} md={6}>
+            </Box>
+            <Box sx={{ flex: '1 1 45%', minWidth: '400px' }}>
               <Card>
                 <CardContent>
                   <Typography variant="h5" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
@@ -1660,8 +1708,8 @@ const DashboardPage = () => {
                   })}
                 </CardContent>
               </Card>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         )}
       </Container>
 
