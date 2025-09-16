@@ -419,12 +419,15 @@ const DashboardPage = () => {
 
   const handleExtendSubmit = async (bookingId, selectedSystemIds, extensionHours) => {
     try {
-      // For now, we'll extend the entire booking duration
-      // In a more advanced implementation, you could extend individual systems
       const updatedBooking = await cafeService.extendBooking(bookingId, extensionHours);
+
       setAllBookings(allBookings.map(b =>
         b._id === bookingId ? updatedBooking : b
       ));
+      
+      // Refresh cafe data to update system timers in SystemManagementModal
+      fetchCafeData();
+      
       setSuccess(`Extended ${selectedSystemIds.length} system(s) by ${extensionHours} hours.`);
       setExtendModalOpen(false);
       setSelectedBookingForExtend(null);

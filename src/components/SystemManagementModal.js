@@ -34,6 +34,7 @@ const calculateRemainingTime = (sessionEndTime, sessionStartTime, duration, _tim
   const now = new Date();
   
   // Primary: Use sessionStartTime + duration (most reliable)
+  // Note: duration already includes any extensions, so don't add extendedTime separately
   if (sessionStartTime && duration) {
     const startTime = new Date(sessionStartTime);
     const endTime = new Date(startTime.getTime() + (duration * 60 * 60 * 1000));
