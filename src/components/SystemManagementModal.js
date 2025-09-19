@@ -250,15 +250,17 @@ const SystemManagementModal = ({
     
     if (booking.systemsBooked && booking.systemsBooked.length > 0) {
       // New format: validate each system type separately
-      for (const bookedSystem of booking.systemsBooked) {
-        const selectedCount = Object.values(selectedSystems[bookedSystem.roomType] || {})
-          .filter(Boolean).length;
-        
-        if (selectedCount !== bookedSystem.numberOfSystems) {
-          return false;
-        }
-      }
-      return true;
+      // Calculate total required systems across all system types
+      const totalRequiredSystems = booking.systemsBooked.reduce((sum, system) => sum + system.numberOfSystems, 0);
+      
+      // Count total selected systems across all rooms
+      const totalSelectedSystems = Object.values(selectedSystems).reduce((total, roomSystems) => {
+        return total + Object.values(roomSystems || {}).filter(Boolean).length;
+      }, 0);
+      
+      // For group bookings, we just need to match the total count
+      // The system assignment logic will handle the specific system types
+      return totalSelectedSystems === totalRequiredSystems;
     } else {
       // Old format: validate for specific room and system type
       const roomName = booking.roomType;
@@ -311,8 +313,20 @@ const SystemManagementModal = ({
             break;
           }
           
-          // Count selected systems of this type in this room
-          const selectedCount = assignment.systemIds.length;
+          // Find the room in cafe data to get system type information
+          const room = cafe?.rooms?.find(r => r.name === bookedSystem.roomType);
+          if (!room) {
+            validationError = `Room ${bookedSystem.roomType} not found`;
+            break;
+          }
+          
+          // Count selected systems of this specific type in this room
+          const selectedSystemsOfType = assignment.systemIds.filter(systemId => {
+            const system = room.systems.find(s => s.systemId === systemId);
+            return system && system.type === bookedSystem.systemType;
+          });
+          
+          const selectedCount = selectedSystemsOfType.length;
           const requiredCount = bookedSystem.numberOfSystems;
           
           if (selectedCount !== requiredCount) {
@@ -486,7 +500,7 @@ const SystemManagementModal = ({
             <Grid container spacing={1}> {/* Reduced spacing */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="body2">
-                  <strong>Customer:</strong> {booking.walkInCustomerName || 'Walk-in Customer'}
+                  <strong>Customer:</strong> {booking.customer ? booking.customer.name : (booking.walkInCustomerName || 'Walk-in Customer')}
                 </Typography>
                 <Typography variant="body2">
                   <strong>Duration:</strong> {formatDuration(booking.duration)}

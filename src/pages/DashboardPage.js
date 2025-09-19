@@ -489,6 +489,7 @@ const DashboardPage = () => {
     }
   };
 
+
   // Walk-in booking handlers
   const handleOpenWalkInModal = () => setWalkInModalOpen(true);
   const handleCloseWalkInModal = () => setWalkInModalOpen(false);
@@ -1297,16 +1298,37 @@ const DashboardPage = () => {
                               {/* Handle both old and new booking formats */}
                               {booking.systemsBooked && booking.systemsBooked.length > 0 ? (
                                 // New format with multiple systems
-                                booking.systemsBooked.map((system, index) => (
-                                  <Box key={index} sx={{ mb: index < booking.systemsBooked.length - 1 ? 1 : 0 }}>
-                                    <Typography variant="body2" fontWeight="bold" color="success.main" sx={{ mb: 0.25 }}>
-                                      {system.roomType}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                      {system.systemType} × {system.numberOfSystems}
-                                    </Typography>
-                                  </Box>
-                                ))
+                                (() => {
+                                  // Check if all systems are from the same room
+                                  const uniqueRooms = [...new Set(booking.systemsBooked.map(s => s.roomType))];
+                                  const isSingleRoom = uniqueRooms.length === 1;
+                                  
+                                  return (
+                                    <Box>
+                                      {/* Show room name only once if all systems are from same room */}
+                                      {isSingleRoom && (
+                                        <Typography variant="body2" fontWeight="bold" color="success.main" sx={{ mb: 0.5 }}>
+                                          {uniqueRooms[0]}
+                                        </Typography>
+                                      )}
+                                      
+                                      {/* Show systems */}
+                                      {booking.systemsBooked.map((system, index) => (
+                                        <Box key={index} sx={{ mb: index < booking.systemsBooked.length - 1 ? 0.5 : 0 }}>
+                                          {/* Show room name only if multiple different rooms */}
+                                          {!isSingleRoom && (
+                                            <Typography variant="body2" fontWeight="bold" color="success.main" sx={{ mb: 0.25 }}>
+                                              {system.roomType}
+                                            </Typography>
+                                          )}
+                                          <Typography variant="caption" color="text.secondary">
+                                            {system.systemType} × {system.numberOfSystems}
+                                          </Typography>
+                                        </Box>
+                                      ))}
+                                    </Box>
+                                  );
+                                })()
                               ) : (
                                 // Old format fallback
                                 <Box>

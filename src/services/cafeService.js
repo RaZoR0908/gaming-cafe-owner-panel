@@ -157,6 +157,7 @@ const verifyOTPAndStartSession = async (bookingId, otp, systemAssignments) => {
   return response.data;
 };
 
+
 const cafeService = {
   getAllCafes,
   getMyCafe,
