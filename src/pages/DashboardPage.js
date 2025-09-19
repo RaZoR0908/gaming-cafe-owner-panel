@@ -52,6 +52,19 @@ const timeToHour = (timeStr) => {
   return hour24;
 };
 
+// Helper function to convert time string to total minutes for proper sorting
+const timeToMinutes = (timeStr) => {
+  if (!timeStr) return 0;
+  const [timePart, period] = timeStr.split(' ');
+  const [hours, minutes] = timePart.split(':').map(Number);
+  
+  let hour24 = hours;
+  if (period === 'PM' && hours !== 12) hour24 += 12;
+  if (period === 'AM' && hours === 12) hour24 = 0;
+  
+  return hour24 * 60 + minutes;
+};
+
 // Helper function to format session start time display
 const formatSessionStartTime = (sessionStartTime, status) => {
   if (!sessionStartTime) {
@@ -140,7 +153,6 @@ const DashboardPage = () => {
   const [success, setSuccess] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [lastStatusRefresh, setLastStatusRefresh] = useState(null);
-  const [reconfirmCountdown, setReconfirmCountdown] = useState({});
 
   // Simple view state - just switch between main sections
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'bookings', 'reviews', 'cafe'
@@ -148,8 +160,6 @@ const DashboardPage = () => {
   // --- State for filtering and sorting ---
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // --- State for the re-confirmation step ---
-  const [bookingToReconfirm, setBookingToReconfirm] = useState(null);
 
   // --- State for modals ---
   const [isWalkInModalOpen, setWalkInModalOpen] = useState(false);
@@ -249,63 +259,7 @@ const DashboardPage = () => {
     }
   }, [user, loading, handleRefreshStatus]);
 
-  // Auto-cancel cancelled bookings after 10 minutes if not reconfirmed
-  useEffect(() => {
-    if (!allBookings.length) return;
 
-    const autoCancelInterval = setInterval(() => {
-      const now = new Date();
-      const updatedBookings = [...allBookings];
-      let hasChanges = false;
-
-      updatedBookings.forEach(booking => {
-        if (booking.status === 'Cancelled') {
-          const minutesSinceCancel = (now - new Date(booking.updatedAt)) / (1000 * 60);
-          
-          // If more than 10 minutes have passed since cancellation, permanently cancel
-          if (minutesSinceCancel >= 10) {
-            // Update the booking to show it's permanently cancelled
-            // We'll add a flag to indicate this
-            if (!booking.permanentlyCancelled) {
-              booking.permanentlyCancelled = true;
-              hasChanges = true;
-            }
-          }
-        }
-      });
-
-      if (hasChanges) {
-        setAllBookings(updatedBookings);
-      }
-    }, 60000); // Check every minute
-
-    return () => clearInterval(autoCancelInterval);
-  }, [allBookings]);
-
-  // Update countdown timer every second for cancelled bookings
-  useEffect(() => {
-    if (!allBookings.length) return;
-
-    const countdownInterval = setInterval(() => {
-      const now = new Date();
-      const newCountdown = {};
-
-      allBookings.forEach(booking => {
-        if (booking.status === 'Cancelled') {
-          const minutesSinceCancel = (now - new Date(booking.updatedAt)) / (1000 * 60);
-          const remainingMinutes = Math.max(0, 10 - minutesSinceCancel);
-          
-          if (remainingMinutes > 0) {
-            newCountdown[booking._id] = Math.ceil(remainingMinutes);
-          }
-        }
-      });
-
-      setReconfirmCountdown(newCountdown);
-    }, 1000); // Update every second
-
-    return () => clearInterval(countdownInterval);
-  }, [allBookings]);
 
   // Fetch reviews when cafe data is loaded
   useEffect(() => {
@@ -328,7 +282,17 @@ const DashboardPage = () => {
       if (dateA !== dateB) {
         return dateA - dateB;
       }
-      return timeToHour(a.startTime || '00:00') - timeToHour(b.startTime || '00:00');
+      
+      const timeA = timeToMinutes(a.startTime || '00:00 AM');
+      const timeB = timeToMinutes(b.startTime || '00:00 AM');
+      if (timeA !== timeB) {
+        return timeA - timeB;
+      }
+      
+      // If same date and time, sort by creation time (earliest first)
+      const createdA = new Date(a.createdAt || 0).getTime();
+      const createdB = new Date(b.createdAt || 0).getTime();
+      return createdA - createdB;
     });
 
     return bookings;
@@ -437,7 +401,6 @@ const DashboardPage = () => {
         await fetchCafeData();
       }
       
-      setBookingToReconfirm(null);
     } catch (err) {
       setError('Failed to update booking status.');
     }
@@ -445,11 +408,36 @@ const DashboardPage = () => {
 
   const handleCancelBooking = async (bookingId, customerName) => {
     const confirmed = window.confirm(
-      `Are you sure you want to cancel the booking for ${customerName}?\n\nThis action cannot be undone.`
+      `Are you sure you want to cancel the booking for ${customerName}?\n\nThis will process a refund if the booking was paid for. This action cannot be undone.`
     );
     
     if (confirmed) {
-      await handleStatusUpdate(bookingId, 'Cancelled');
+      try {
+        setLoading(true);
+        const response = await cafeService.cancelBooking(bookingId);
+        
+        // Update the booking in the local state
+        setAllBookings(prevBookings => 
+          prevBookings.map(booking => 
+            booking._id === bookingId 
+              ? { ...booking, status: 'Cancelled' }
+              : booking
+          )
+        );
+        
+        // Show success message with refund info
+        let successMessage = `Booking for ${customerName} has been cancelled successfully.`;
+        if (response.data?.refund) {
+          const refund = response.data.refund;
+          successMessage += `\n\nRefund Details:\n- Method: ${refund.method}\n- Amount: ₹${refund.amount}\n- Status: ${refund.status}\n- Message: ${refund.message}`;
+        }
+        
+        setSuccess(successMessage);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to cancel booking');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -1224,7 +1212,6 @@ const DashboardPage = () => {
                       // Owner can always cancel their own bookings (both walk-in and scheduled)
 
                       const minutesSinceUpdate = (now - new Date(booking.updatedAt)) / (1000 * 60);
-                      const isReconfirmable = minutesSinceUpdate < 10; // Back to 10 minutes as originally set
                       
                       // Check if session has been active for more than 15 minutes (to hide cancel button)
                       const isSessionStarted = booking.status === 'Active' && booking.sessionStartTime;
@@ -1582,59 +1569,9 @@ const DashboardPage = () => {
                                 </>
                               )}
                               
-                              {booking.status === 'Cancelled' && isReconfirmable && (
-                                 <>
-                                   {bookingToReconfirm === booking._id ? (
-                                     <>
-                                       <Button 
-                                         size="small" 
-                                         variant="contained" 
-                                         color="success" 
-                                         onClick={() => handleStatusUpdate(booking._id, 'Confirmed')}
-                                       >
-                                         Confirm
-                                       </Button>
-                                       <Button 
-                                         size="small" 
-                                         variant="outlined" 
-                                         onClick={() => setBookingToReconfirm(null)}
-                                       >
-                                         Back
-                                       </Button>
-                                     </>
-                                   ) : (
-                                     <Box sx={{ textAlign: 'center' }}>
-                                       <Tooltip title="You have 10 minutes to reconfirm this cancelled booking. After that, it will be permanently cancelled.">
-                                         <span>
-                                           <Button 
-                                             size="small" 
-                                             variant="outlined" 
-                                             onClick={() => setBookingToReconfirm(booking._id)}
-                                             fullWidth
-                                           >
-                                             Re-confirm
-                                           </Button>
-                                         </span>
-                                       </Tooltip>
-                                       <Typography 
-                                         variant="caption" 
-                                         color="warning.main" 
-                                         sx={{ 
-                                           display: 'block', 
-                                           mt: 0.5,
-                                           fontWeight: 'bold'
-                                         }}
-                                       >
-                                         {reconfirmCountdown[booking._id] || 0}m left
-                                       </Typography>
-                                     </Box>
-                                   )}
-                                 </>
-                               )}
-                               
-                               {booking.status === 'Cancelled' && !isReconfirmable && (
-                                 <Typography variant="caption" color="error" sx={{ fontStyle: 'italic' }}>
-                                   Re-confirm expired
+                              {booking.status === 'Cancelled' && (
+                                 <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', textAlign: 'center' }}>
+                                   Cancelled
                                  </Typography>
                                )}
                               
@@ -1928,10 +1865,10 @@ const DashboardPage = () => {
             
             <Alert severity="success">
               <Typography variant="h6" gutterBottom>
-                Reconfirm Policy
+                Cancellation Policy
               </Typography>
               <Typography variant="body2">
-                Cancelled bookings can be reconfirmed within 10 minutes. After that, they become permanently cancelled.
+                Once a booking is cancelled, it cannot be reconfirmed. Cancelled bookings remain cancelled.
               </Typography>
             </Alert>
             

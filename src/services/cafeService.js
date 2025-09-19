@@ -157,6 +157,16 @@ const verifyOTPAndStartSession = async (bookingId, otp, systemAssignments) => {
   return response.data;
 };
 
+const cancelBooking = async (bookingId) => {
+  const config = { headers: getAuthHeader() };
+  const response = await axios.post(
+    BOOKING_API_URL + bookingId + '/cancel',
+    {},
+    config
+  );
+  return response.data;
+};
+
 
 const cafeService = {
   getAllCafes,
@@ -178,6 +188,7 @@ const cafeService = {
   updateSystemMaintenanceStatus,
   verifyOTP,
   verifyOTPAndStartSession,
+  cancelBooking,
 };
 
 export default cafeService;
