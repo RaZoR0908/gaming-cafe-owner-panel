@@ -128,11 +128,6 @@ const SystemManagementModal = ({
   booking = null, // For assignment mode
   onSystemsAssigned = null // Callback for assignment
 }) => {
-  console.log('🔍 SystemManagementModal render - open:', open);
-  console.log('🔍 SystemManagementModal render - mode:', mode);
-  console.log('🔍 SystemManagementModal render - booking:', booking);
-  console.log('🔍 SystemManagementModal render - myCafe:', myCafe);
-  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -440,12 +435,7 @@ const SystemManagementModal = ({
 
   const cafe = systemStatus || myCafe;
   
-  console.log('🔍 Modal cafe check - cafe:', cafe);
-  console.log('🔍 Modal cafe check - systemStatus:', systemStatus);
-  console.log('🔍 Modal cafe check - myCafe:', myCafe);
-  
   if (!cafe) {
-    console.log('❌ Modal returning null - no cafe data');
     return null;
   }
 

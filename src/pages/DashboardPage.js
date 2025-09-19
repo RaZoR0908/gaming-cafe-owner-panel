@@ -338,15 +338,43 @@ const DashboardPage = () => {
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
     const validBookings = allBookings.filter(b => b && b.bookingDate && b.status); // Filter out invalid bookings
-    const todayBookings = validBookings.filter(b => b.bookingDate.startsWith(today));
     
-    // Active bookings: exclude cancelled and permanently cancelled bookings
-    const activeBookings = validBookings.filter(b => 
-      ['Booked', 'Confirmed', 'Active'].includes(b.status) && !b.permanentlyCancelled
+    // Remove duplicate bookings by ID, keeping the most recent one (by updatedAt or createdAt)
+    const uniqueBookings = validBookings.reduce((acc, current) => {
+      const existingIndex = acc.findIndex(b => b._id === current._id);
+      if (existingIndex >= 0) {
+        // If duplicate found, keep the one with more recent updatedAt or createdAt
+        const existing = acc[existingIndex];
+        const currentDate = new Date(current.updatedAt || current.createdAt || 0);
+        const existingDate = new Date(existing.updatedAt || existing.createdAt || 0);
+        
+        if (currentDate > existingDate) {
+          acc[existingIndex] = current; // Replace with more recent
+        }
+        // Otherwise keep the existing one
+      } else {
+        acc.push(current); // Add new booking
+      }
+      return acc;
+    }, []);
+    
+    // Active bookings: ONLY show bookings that are currently in 'Active' state (sessions in progress)
+    const activeBookings = uniqueBookings.filter(b => 
+      b.status === 'Active' && !b.permanentlyCancelled
     );
     
+    // All non-cancelled bookings (for reference) - using your actual implemented statuses
+    const nonCancelledBookings = uniqueBookings.filter(b => 
+      !['Cancelled', 'Completed'].includes(b.status) && !b.permanentlyCancelled
+    );
+    
+
+    
+    // Use deduplicated bookings for all calculations
+    const todayBookings = uniqueBookings.filter(b => b.bookingDate.startsWith(today));
+    
     // Total revenue: only count completed bookings
-    const completedBookings = validBookings.filter(b => b.status === 'Completed');
+    const completedBookings = uniqueBookings.filter(b => b.status === 'Completed');
     const totalRevenue = completedBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
     
     // Daily revenue: only count today's completed bookings
@@ -509,11 +537,9 @@ const DashboardPage = () => {
     
     // Check if this is a mobile booking (has OTP)
     if (booking.otp) {
-      console.log('🔍 Mobile booking detected - opening OTP verification modal');
       setSelectedBookingForOTP(booking);
       setOTPModalOpen(true);
     } else {
-      console.log('🔍 Walk-in booking detected - opening system assignment modal');
       setSelectedBookingForAssignment(booking);
       setSystemManagementMode('assignment');
       setSystemManagementModalOpen(true);
@@ -1072,11 +1098,11 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '11%',
+                          width: '10%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          minWidth: '100px'
+                          minWidth: '90px'
                         }}
                       >
                         Room/System
@@ -1086,11 +1112,11 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '11%',
+                          width: '10%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          minWidth: '100px'
+                          minWidth: '90px'
                         }}
                       >
                         Systems
@@ -1109,6 +1135,36 @@ const DashboardPage = () => {
                         }}
                       >
                         Duration
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          fontWeight: 'bold', 
+                          bgcolor: 'primary.main', 
+                          color: 'white',
+                          width: '7%',
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 11,
+                          minWidth: '70px',
+                          textAlign: 'center'
+                        }}
+                      >
+                        Extended
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          fontWeight: 'bold', 
+                          bgcolor: 'primary.main', 
+                          color: 'white',
+                          width: '9%',
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 11,
+                          minWidth: '90px',
+                          textAlign: 'center'
+                        }}
+                      >
+                        Extension Fee
                       </TableCell>
                       <TableCell 
                         sx={{ 
@@ -1306,6 +1362,58 @@ const DashboardPage = () => {
                               />
                             </Box>
                           </TableCell>
+                          
+                          {/* Extended Time Column */}
+                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top' }}>
+                            {booking.extendedTime > 0 ? (
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                                <TrendingUpIcon fontSize="small" color="warning" />
+                                <Chip
+                                  label={`+${formatDuration(booking.extendedTime)}`}
+                                  size="small"
+                                  variant="filled"
+                                  color="warning"
+                                  sx={{ fontWeight: 'bold' }}
+                                />
+                              </Box>
+                            ) : (
+                              <Typography variant="caption" color="text.secondary">
+                                -
+                              </Typography>
+                            )}
+                          </TableCell>
+                          
+                          {/* Extension Fee Column */}
+                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top' }}>
+                            {booking.extendedTime > 0 ? (
+                              <Box>
+                                <Typography 
+                                  variant="body2" 
+                                  fontWeight="bold" 
+                                  color="warning.main"
+                                  sx={{ fontFamily: 'monospace', mb: 0.5 }}
+                                >
+                                  ₹{booking.extensionPaymentAmount?.toLocaleString() || '0'}
+                                </Typography>
+                                <Chip
+                                  label={booking.extensionPaymentStatus === 'completed' ? 'Paid' : 
+                                         booking.extensionPaymentStatus === 'pending' ? 'Pending' : 
+                                         booking.extensionPaymentStatus === 'failed' ? 'Failed' : 'Not Set'}
+                                  size="small"
+                                  variant="filled"
+                                  color={booking.extensionPaymentStatus === 'completed' ? 'success' : 
+                                         booking.extensionPaymentStatus === 'pending' ? 'warning' : 
+                                         booking.extensionPaymentStatus === 'failed' ? 'error' : 'default'}
+                                  sx={{ fontWeight: 'bold', fontSize: '0.7rem' }}
+                                />
+                              </Box>
+                            ) : (
+                              <Typography variant="caption" color="text.secondary">
+                                -
+                              </Typography>
+                            )}
+                          </TableCell>
+                          
                           <TableCell sx={{ textAlign: 'right', verticalAlign: 'top' }}>
                             <Typography 
                               variant="h6" 
@@ -1731,10 +1839,7 @@ const DashboardPage = () => {
         onSystemsAssigned={handleSystemsAssigned}
       />
       
-      {/* Debug info */}
-      {console.log('🔍 Modal debug - isSystemManagementModalOpen:', isSystemManagementModalOpen)}
-      {console.log('🔍 Modal debug - systemManagementMode:', systemManagementMode)}
-      {console.log('🔍 Modal debug - selectedBookingForAssignment:', selectedBookingForAssignment)}
+
 
       {/* Extend Session Modal */}
       <ExtendSessionModal
