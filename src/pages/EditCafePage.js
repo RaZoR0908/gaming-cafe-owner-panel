@@ -19,6 +19,78 @@ import Business from '@mui/icons-material/Business';
 
 const steps = ['Basic Details', 'Rooms & Systems', 'Manage Photos'];
 
+// Enhanced TextField component with professional styling
+const EnhancedTextField = ({ sx = {}, ...props }) => (
+  <TextField
+    {...props}
+    sx={{
+      '& .MuiOutlinedInput-root': {
+        borderRadius: '12px',
+        backgroundColor: '#ffffff',
+        border: '2px solid #e2e8f0',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+        minHeight: '56px', // Ensure minimum height
+        '&:hover': {
+          borderColor: '#f59e0b',
+          boxShadow: '0 4px 12px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+          transform: 'translateY(-1px)',
+        },
+        '&.Mui-focused': {
+          borderColor: '#f59e0b',
+          boxShadow: '0 6px 20px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+          transform: 'translateY(-2px)',
+        },
+        '&.Mui-error': {
+          borderColor: '#ef4444',
+          boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)',
+        }
+      },
+      '& .MuiInputLabel-root': {
+        color: '#64748b',
+        fontWeight: 600,
+        fontSize: '0.9rem',
+        '&.Mui-focused': {
+          color: '#f59e0b',
+          fontWeight: 700,
+        },
+        '&.Mui-error': {
+          color: '#ef4444',
+        }
+      },
+      '& .MuiInputBase-input': {
+        color: '#1e293b',
+        fontSize: '1rem', // Increased font size for better readability
+        fontWeight: 500,
+        padding: '16px 18px', // Increased padding for better text visibility
+        lineHeight: '1.5',
+        '&::placeholder': {
+          color: '#94a3b8',
+          opacity: 1,
+          fontWeight: 400,
+        }
+      },
+      '& .MuiFormHelperText-root': {
+        color: '#64748b',
+        fontSize: '0.85rem', // Slightly larger helper text
+        fontWeight: 500,
+        marginTop: '8px',
+        lineHeight: '1.4',
+        '&.Mui-error': {
+          color: '#ef4444',
+        }
+      },
+      // Ensure multiline inputs have proper height
+      '& .MuiInputBase-inputMultiline': {
+        padding: '16px 18px',
+        minHeight: '80px', // Minimum height for textarea
+        resize: 'vertical',
+      },
+      ...sx
+    }}
+  />
+);
+
 // --- Reusable SystemCard Component ---
 const SystemCard = ({ system, roomIndex, systemIndex, handleSystemSpecChange, handleRemoveSystem }) => {
   return (
@@ -37,13 +109,13 @@ const SystemCard = ({ system, roomIndex, systemIndex, handleSystemSpecChange, ha
       {system.type === 'PC' && (
         <Grid container spacing={2}>
           <Grid item xs={12} sm={4}>
-            <TextField fullWidth label="RAM" name="ram" value={system.specs.ram} onChange={(e) => handleSystemSpecChange(roomIndex, systemIndex, e)} placeholder="e.g., 16GB DDR4" />
+            <EnhancedTextField fullWidth label="RAM" name="ram" value={system.specs.ram} onChange={(e) => handleSystemSpecChange(roomIndex, systemIndex, e)} placeholder="e.g., 16GB DDR4" />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <TextField fullWidth label="Processor" name="processor" value={system.specs.processor} onChange={(e) => handleSystemSpecChange(roomIndex, systemIndex, e)} placeholder="e.g., Intel Core i7" />
+            <EnhancedTextField fullWidth label="Processor" name="processor" value={system.specs.processor} onChange={(e) => handleSystemSpecChange(roomIndex, systemIndex, e)} placeholder="e.g., Intel Core i7" />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <TextField fullWidth label="Graphics Card" name="graphicsCard" value={system.specs.graphicsCard} onChange={(e) => handleSystemSpecChange(roomIndex, systemIndex, e)} placeholder="e.g., NVIDIA RTX 3080" />
+            <EnhancedTextField fullWidth label="Graphics Card" name="graphicsCard" value={system.specs.graphicsCard} onChange={(e) => handleSystemSpecChange(roomIndex, systemIndex, e)} placeholder="e.g., NVIDIA RTX 3080" />
           </Grid>
         </Grid>
       )}
@@ -216,7 +288,21 @@ const EditCafePage = () => {
   };
 
   const onDrop = async (acceptedFiles) => {
+    // Check if adding these files would exceed the 4 photo limit
+    if (photos.length + acceptedFiles.length > 4) {
+      setError(`You can only upload a maximum of 4 photos. You currently have ${photos.length} photos.`);
+      return;
+    }
+
+    // Check file size (5MB limit per file)
+    const oversizedFiles = acceptedFiles.filter(file => file.size > 5 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      setError(`Some files are too large. Maximum file size is 5MB. Please resize and try again.`);
+      return;
+    }
+
     setUploading(true);
+    setError('');
     const uploadedUrls = [];
     for (const file of acceptedFiles) {
       const formData = new FormData();
@@ -237,7 +323,15 @@ const EditCafePage = () => {
     setPhotos([...photos, ...uploadedUrls]);
     setUploading(false);
   };
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: {'image/*': []} });
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+    onDrop, 
+    accept: {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png']
+    },
+    maxFiles: 4 - photos.length,
+    maxSize: 5 * 1024 * 1024 // 5MB
+  });
   const removePhoto = (index) => setPhotos(photos.filter((_, i) => i !== index));
 
   const handleSubmit = async () => {
@@ -273,26 +367,245 @@ const EditCafePage = () => {
     switch (step) {
       case 0:
         return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Step 1: Cafe Name */}
+            <Box sx={{ 
+              p: 3, 
+              pt: 6,
+              backgroundColor: 'rgba(59, 130, 246, 0.05)', 
+              borderRadius: '12px', 
+              border: '1px solid rgba(59, 130, 246, 0.1)',
+              position: 'relative',
+              '&::before': {
+                content: '"1"',
+                position: 'absolute',
+                top: -18,
+                left: 20,
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                zIndex: 10,
+                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
+              }
+            }}>
+              <Typography variant="h6" sx={{ mb: 2, color: '#1e293b', fontWeight: 600 }}>
+                Cafe Name
+              </Typography>
+              <EnhancedTextField 
+                fullWidth 
+                label="Enter your cafe name" 
+                name="name" 
+                value={formData.name} 
+                onChange={handleChange} 
+                required 
+                helperText="Choose a unique name for your gaming cafe"
+              />
+            </Box>
+
+            {/* Step 2: Address with Location */}
+            <Box sx={{ 
+              p: 3, 
+              pt: 6,
+              backgroundColor: 'rgba(16, 185, 129, 0.05)', 
+              borderRadius: '12px', 
+              border: '1px solid rgba(16, 185, 129, 0.1)',
+              position: 'relative',
+              '&::before': {
+                content: '"2"',
+                position: 'absolute',
+                top: -18,
+                left: 20,
+                backgroundColor: '#10b981',
+                color: 'white',
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                zIndex: 10,
+                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+              }
+            }}>
+              <Typography variant="h6" sx={{ mb: 2, color: '#1e293b', fontWeight: 600 }}>
+                Cafe Location
+              </Typography>
           <Grid container spacing={2}>
-            <Grid item xs={12}><TextField fullWidth label="Cafe Name" name="name" value={formData.name} onChange={handleChange} required /></Grid>
-            <Grid item xs={12}>
-              <TextField fullWidth label="Full Address" name="address" value={formData.address} onChange={handleChange} required helperText="Coordinates will be found automatically as you type." />
-              <Box sx={{display: 'flex', alignItems: 'center', gap: 1, mt: 1}}>
-                <Button variant="outlined" startIcon={<MyLocationIcon />} onClick={handleGetCurrentLocation}>Get Current Location</Button>
-                {geocodeStatus && <Typography variant="caption" sx={{ color: geocodeStatus.startsWith('✅') ? 'green' : 'orange' }}>{geocodeStatus}</Typography>}
+                <Grid item xs={12} md={8}>
+                  <EnhancedTextField 
+                    fullWidth 
+                    label="Full Address" 
+                    name="address" 
+                    value={formData.address} 
+                    onChange={handleChange} 
+                    required 
+                    helperText="Enter the complete address of your cafe" 
+                    multiline
+                    rows={1}
+                    sx={{
+                      '& .MuiInputBase-inputMultiline': {
+                        minHeight: '60px', // Reduced height for more horizontal layout
+                        fontSize: '1rem',
+                        lineHeight: '1.4',
+                        resize: 'vertical'
+                      }
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <Button 
+                      variant="outlined" 
+                      startIcon={<MyLocationIcon />} 
+                      onClick={handleGetCurrentLocation}
+                      sx={{
+                        borderRadius: '12px',
+                        px: 2,
+                        py: 1.5,
+                        fontWeight: 600,
+                        borderColor: '#10b981',
+                        color: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        '&:hover': {
+                          backgroundColor: '#10b981',
+                          color: '#ffffff',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 6px 20px rgba(16, 185, 129, 0.4)',
+                        }
+                      }}
+                    >
+                      Get Current Location
+                    </Button>
+                    {geocodeStatus && (
+                      <Box sx={{ 
+                        mt: 1,
+                        px: 2,
+                        py: 1,
+                        backgroundColor: geocodeStatus.startsWith('✅') ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                        borderRadius: '8px',
+                        border: `1px solid ${geocodeStatus.startsWith('✅') ? 'rgba(34, 197, 94, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
+                      }}>
+                        <Typography variant="body2" sx={{ 
+                          color: geocodeStatus.startsWith('✅') ? '#16a34a' : '#d97706',
+                          fontWeight: 600,
+                          fontSize: '0.8rem',
+                          textAlign: 'center'
+                        }}>
+                          {geocodeStatus}
+                        </Typography>
+                      </Box>
+                    )}
               </Box>
+                </Grid>
             </Grid>
             {showManualCoords && (
-              <>
-                <Grid item xs={6}><TextField fullWidth label="Longitude" name="longitude" type="number" value={formData.longitude} onChange={handleChange} required /></Grid>
-                <Grid item xs={6}><TextField fullWidth label="Latitude" name="latitude" type="number" value={formData.latitude} onChange={handleChange} required /></Grid>
-              </>
-            )}
-            <Grid item xs={6}><TextField fullWidth label="Opening Time" name="openingTime" type="time" value={formData.openingTime} onChange={handleChange} InputLabelProps={{ shrink: true }} required /></Grid>
-            <Grid item xs={6}><TextField fullWidth label="Closing Time" name="closingTime" type="time" value={formData.closingTime} onChange={handleChange} InputLabelProps={{ shrink: true }} required /></Grid>
-            <Grid item xs={12}><TextField fullWidth label="Contact Number" name="contactNumber" value={formData.contactNumber} onChange={handleChange} placeholder="e.g., 9876543210" helperText="Phone number where customers can reach you (10 digits only)" inputProps={{ maxLength: 10, pattern: '[0-9]*' }} /></Grid>
-            <Grid item xs={12}><TextField fullWidth label="Cafe Description" name="description" value={formData.description} onChange={handleChange} multiline rows={3} placeholder="Describe your gaming cafe, atmosphere, special features, etc." helperText="Tell customers what makes your cafe special (max 500 characters)" inputProps={{ maxLength: 500 }} /></Grid>
+                <Grid container spacing={2} sx={{ mt: 2 }}>
+                  <Grid item xs={6}><EnhancedTextField fullWidth label="Longitude" name="longitude" type="number" value={formData.longitude} onChange={handleChange} required /></Grid>
+                  <Grid item xs={6}><EnhancedTextField fullWidth label="Latitude" name="latitude" type="number" value={formData.latitude} onChange={handleChange} required /></Grid>
+                </Grid>
+              )}
+            </Box>
+
+            {/* Step 3: Operating Hours */}
+            <Box sx={{ 
+              p: 3, 
+              pt: 6,
+              backgroundColor: 'rgba(245, 158, 11, 0.05)', 
+              borderRadius: '12px', 
+              border: '1px solid rgba(245, 158, 11, 0.1)',
+              position: 'relative',
+              '&::before': {
+                content: '"3"',
+                position: 'absolute',
+                top: -18,
+                left: 20,
+                backgroundColor: '#f59e0b',
+                color: 'white',
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                zIndex: 10,
+                boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
+              }
+            }}>
+              <Typography variant="h6" sx={{ mb: 2, color: '#1e293b', fontWeight: 600 }}>
+                Operating Hours
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={6}><EnhancedTextField fullWidth label="Opening Time" name="openingTime" type="time" value={formData.openingTime} onChange={handleChange} InputLabelProps={{ shrink: true }} required /></Grid>
+                <Grid item xs={6}><EnhancedTextField fullWidth label="Closing Time" name="closingTime" type="time" value={formData.closingTime} onChange={handleChange} InputLabelProps={{ shrink: true }} required /></Grid>
+              </Grid>
+            </Box>
+
+            {/* Step 4: Contact & Description */}
+            <Box sx={{ 
+              p: 3, 
+              pt: 6,
+              backgroundColor: 'rgba(139, 92, 246, 0.05)', 
+              borderRadius: '12px', 
+              border: '1px solid rgba(139, 92, 246, 0.1)',
+              position: 'relative',
+              '&::before': {
+                content: '"4"',
+                position: 'absolute',
+                top: -18,
+                left: 20,
+                backgroundColor: '#8b5cf6',
+                color: 'white',
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                zIndex: 10,
+                boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
+              }
+            }}>
+              <Typography variant="h6" sx={{ mb: 2, color: '#1e293b', fontWeight: 600 }}>
+                Contact & Description
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12}><EnhancedTextField fullWidth label="Contact Number" name="contactNumber" value={formData.contactNumber} onChange={handleChange} helperText="Phone number where customers can reach you (10 digits only)" inputProps={{ maxLength: 10, pattern: '[0-9]*' }} /></Grid>
+                <Grid item xs={12}><EnhancedTextField 
+                  fullWidth 
+                  label="Cafe Description" 
+                  name="description" 
+                  value={formData.description} 
+                  onChange={handleChange} 
+                  multiline 
+                  rows={2} 
+                  placeholder="Describe your gaming cafe, atmosphere, special features, etc." 
+                  helperText="Tell customers what makes your cafe special (max 500 characters)" 
+                  inputProps={{ maxLength: 500 }}
+                  sx={{
+                    '& .MuiInputBase-inputMultiline': {
+                      minHeight: '60px', // Small initial height for description
+                      fontSize: '1rem',
+                      lineHeight: '1.5',
+                    }
+                  }}
+                /></Grid>
           </Grid>
+            </Box>
+          </Box>
         );
       case 1:
         return (
@@ -307,7 +620,7 @@ const EditCafePage = () => {
               return (
                 <Card key={roomIndex} variant="outlined" sx={{ mb: 3, p: 2, pb: 3 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <TextField label={`Room #${roomIndex + 1} Name`} name="name" value={room.name} onChange={(e) => handleRoomNameChange(roomIndex, e)} required sx={{ flexGrow: 1, mr: 1 }} />
+                    <EnhancedTextField label={`Room #${roomIndex + 1} Name`} name="name" value={room.name} onChange={(e) => handleRoomNameChange(roomIndex, e)} required sx={{ flexGrow: 1, mr: 1 }} />
                     <Button variant="outlined" color="error" onClick={() => handleRemoveRoom(roomIndex)}>Remove Room</Button>
                   </Box>
                   
@@ -345,10 +658,10 @@ const EditCafePage = () => {
                         </FormControl>
                       </Grid>
                       <Grid item xs={6} sm={4}>
-                        <TextField fullWidth label="Price Per Hour (INR)" name="pricePerHour" type="number" value={systemAddForm.pricePerHour} onChange={handleSystemAddFormChange} required />
+                        <EnhancedTextField fullWidth label="Price Per Hour (INR)" name="pricePerHour" type="number" value={systemAddForm.pricePerHour} onChange={handleSystemAddFormChange} required />
                       </Grid>
                       <Grid item xs={6} sm={4}>
-                        <TextField fullWidth label="Count" name="count" type="number" value={systemAddForm.count} onChange={handleSystemAddFormChange} InputProps={{ inputProps: { min: 1 } }} required/>
+                        <EnhancedTextField fullWidth label="Count" name="count" type="number" value={systemAddForm.count} onChange={handleSystemAddFormChange} InputProps={{ inputProps: { min: 1 } }} required/>
                       </Grid>
                       <Grid item xs={12}>
                         <Button fullWidth variant="contained" color="success" startIcon={<AddCircleOutlineIcon />} onClick={() => handleAddSystems(roomIndex)}>Add Systems</Button>
@@ -367,7 +680,15 @@ const EditCafePage = () => {
             <Paper {...getRootProps()} variant="outlined" sx={{ p: 4, textAlign: 'center', cursor: 'pointer', backgroundColor: isDragActive ? '#e3f2fd' : '#fafafa', borderColor: isDragActive ? 'primary.main' : 'rgba(0, 0, 0, 0.23)' }}>
               <input {...getInputProps()} />
               <UploadFileIcon sx={{ fontSize: 48, color: 'text.secondary' }} />
-              <Typography>Drag 'n' drop some files here, or click to select files</Typography>
+              <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                Upload Cafe Photos
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem', mb: 1 }}>
+                Maximum 4 photos • 5MB per file • JPG, PNG formats only
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 600 }}>
+                {photos.length}/4 photos uploaded
+              </Typography>
             </Paper>
             {uploading && <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}><CircularProgress /></Box>}
             <Grid container spacing={2} sx={{ mt: 2 }}>
@@ -392,52 +713,63 @@ const EditCafePage = () => {
   return (
     <Box sx={{ 
       minHeight: '100vh', 
-      background: '#f8fafc',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
       position: 'relative'
     }}>
 
       {/* Success Modal */}
-      <Modal
-        open={showSuccessModal}
-        aria-labelledby="success-modal-title"
-        aria-describedby="success-modal-description"
-      >
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
+        <Modal
+            open={showSuccessModal}
+            aria-labelledby="success-modal-title"
+            aria-describedby="success-modal-description"
+        >
+            <Box sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
           width: { xs: '90%', sm: 400 },
-          bgcolor: 'background.paper',
-          border: '2px solid #4caf50',
-          boxShadow: 24,
-          p: 4,
-          textAlign: 'center',
+                bgcolor: 'background.paper',
+                border: '2px solid #4caf50',
+                boxShadow: 24,
+                p: 4,
+                textAlign: 'center',
           borderRadius: 4,
           background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(20px)',
-        }}>
-          <CheckCircleIcon sx={{ fontSize: 60, color: 'success.main' }} />
+            }}>
+                <CheckCircleIcon sx={{ fontSize: 60, color: 'success.main' }} />
           <Typography id="success-modal-title" variant="h6" component="h2" sx={{ mt: 2, fontWeight: 600 }}>
             Cafe Updated Successfully!
-          </Typography>
+                </Typography>
           <Typography id="success-modal-description" sx={{ mt: 1, color: 'text.secondary' }}>
-            You will be redirected to the dashboard shortly.
-          </Typography>
-        </Box>
-      </Modal>
+                    You will be redirected to the dashboard shortly.
+                </Typography>
+            </Box>
+        </Modal>
 
-      {/* Professional Navigation */}
+      {/* Professional Header - Matching CreateCafePage */}
       <Box
         sx={{
-          background: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
-          px: 4,
+          background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          px: 3,
           py: 2,
           position: 'sticky',
           top: 0,
           zIndex: 1000,
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+          boxShadow: '0 8px 25px -5px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1)',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '3px',
+            background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 25%, #06b6d4 50%, #10b981 75%, #f59e0b 100%)',
+            zIndex: 1
+          }
         }}
       >
         <Container maxWidth="lg">
@@ -448,121 +780,220 @@ const EditCafePage = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: 48,
-                  height: 48,
-                  borderRadius: '50%',
-                  backgroundColor: '#fef3c7',
-                  border: '1px solid #fde68a'
+                  width: 50,
+                  height: 50,
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                    boxShadow: '0 6px 20px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+                  }
                 }}
               >
-                <Business sx={{ color: '#f59e0b', fontSize: 24 }} />
+                <Business sx={{ 
+                  color: '#ffffff', 
+                  fontSize: 24,
+                  filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
+                }} />
               </Box>
-              <Typography 
-                variant="h5" 
-                component="span" 
-                sx={{ 
-                  fontWeight: 700, 
-                  color: '#1e293b'
-                }}
-              >
-                Edit Your Cafe
-              </Typography>
+              <Box>
+                <Typography 
+                  variant="h5" 
+                  component="span" 
+                  sx={{ 
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    fontSize: '1.3rem',
+                    textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                    letterSpacing: '0.5px'
+                  }}
+                >
+                  Edit Your Cafe
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.5px',
+                    textTransform: 'uppercase',
+                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}
+                >
+                  Update Your Gaming Cafe Profile
+                </Typography>
+              </Box>
             </Box>
             <Button 
               component={Link}
               to="/dashboard" 
               sx={{ 
-                color: '#64748b',
-                backgroundColor: '#f1f5f9',
-                border: '1px solid #e2e8f0',
-                borderRadius: 1,
-                px: 3,
+                color: '#ffffff',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                px: 2.5,
                 py: 1,
                 fontWeight: 600,
+                fontSize: '0.9rem',
+                backdropFilter: 'blur(10px)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                  backgroundColor: '#e2e8f0',
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
                   transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
                 }
               }}
             >
-              Back to Dashboard
+              ← Back to Dashboard
             </Button>
           </Box>
         </Container>
       </Box>
 
-      <Container maxWidth="lg" sx={{ py: 4, position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="lg" sx={{ py: 2, position: 'relative', zIndex: 1 }}>
         <Paper
           elevation={0}
           sx={{
-            borderRadius: 2,
+            borderRadius: '16px',
             overflow: 'hidden',
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+            border: '1px solid rgba(226, 232, 240, 0.8)',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.06)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15), 0 10px 20px rgba(0, 0, 0, 0.1)',
+              transform: 'translateY(-2px)',
+            }
           }}
         >
-          <CardContent sx={{ p: 6 }}>
-            {/* Header Section */}
-            <Box sx={{ textAlign: 'center', mb: 6 }}>
-              <Typography variant="h3" component="h1" sx={{ 
-                fontWeight: 700, 
-                mb: 2,
-                color: '#1e293b'
-              }}>
-                Update Your Cafe
-              </Typography>
+          <CardContent sx={{ p: 4 }}>
+            {/* Header Section - Matching CreateCafePage */}
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
               <Typography 
-                variant="h6" 
+                variant="h4" 
+                component="h1" 
                 sx={{ 
-                  maxWidth: 600, 
-                  mx: 'auto',
-                  color: '#64748b',
-                  fontWeight: 400
+                  fontWeight: 800, 
+                  mb: 2,
+                  background: 'linear-gradient(135deg, #1e293b 0%, #3b82f6 50%, #8b5cf6 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  fontSize: { xs: '2rem', md: '2.2rem' },
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                  letterSpacing: '-0.02em',
+                  position: 'relative',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: '-8px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '60px',
+                    height: '4px',
+                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                    borderRadius: '2px',
+                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
+                  }
                 }}
               >
-                Modify your cafe details, systems, and photos to keep your profile up to date
+                Update Your Cafe
               </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                <Typography 
+                  sx={{ 
+                    fontSize: '1.8rem',
+                    color: '#64748b',
+                    textShadow: '0 2px 8px rgba(100, 116, 139, 0.4)',
+                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))'
+                  }}
+                >
+                  ✨
+                </Typography>
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    maxWidth: 600, 
+                    color: '#475569',
+                    fontWeight: 600,
+                    fontSize: '1.15rem',
+                    lineHeight: 1.7,
+                    textAlign: 'center',
+                    background: 'linear-gradient(135deg, #475569 0%, #64748b 50%, #94a3b8 100%)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}
+                >
+                  Modify your cafe details, systems, and photos to keep your profile up to date
+                </Typography>
+                <Typography 
+                  sx={{ 
+                    fontSize: '1.8rem',
+                    color: '#64748b',
+                    textShadow: '0 2px 8px rgba(100, 116, 139, 0.4)',
+                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))'
+                  }}
+                >
+                  ✨
+                </Typography>
+              </Box>
             </Box>
 
-            {/* Professional Stepper */}
+            {/* Compact Professional Stepper - Matching CreateCafePage */}
             <Stepper 
               activeStep={activeStep} 
               sx={{ 
-                mb: 6,
+                mb: 4,
                 '& .MuiStepLabel-root': {
                   '& .MuiStepLabel-label': {
-                    fontSize: '1rem',
-                    fontWeight: 600
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    transition: 'all 0.3s ease'
                   }
                 },
                 '& .MuiStepIcon-root': {
-                  fontSize: '2rem',
+                  fontSize: '1.5rem',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'scale(1.1)'
+                  },
                   '&.Mui-completed': {
-                    color: '#2e7d32'
+                    color: '#10b981'
                   },
                   '&.Mui-active': {
-                    color: '#f57c00'
+                    color: '#3b82f6'
+                  }
+                },
+                '& .MuiStepLabel-label': {
+                  '&.Mui-active': {
+                    color: '#3b82f6',
+                    fontWeight: 700
+                  },
+                  '&.Mui-completed': {
+                    color: '#10b981',
+                    fontWeight: 600
                   }
                 }
               }}
             >
               {steps.map((label, index) => (
                 <Step key={label}>
-                  <StepLabel 
-                    sx={{
-                      '& .MuiStepLabel-label': {
-                        color: activeStep === index ? '#f57c00' : 
-                               activeStep > index ? '#2e7d32' : 'text.secondary'
-                      }
-                    }}
-                  >
-                    {label}
-                  </StepLabel>
+                  <StepLabel>{label}</StepLabel>
                 </Step>
               ))}
             </Stepper>
-
+            
             {/* Error Alert */}
             {error && (
               <Alert 
@@ -579,40 +1010,48 @@ const EditCafePage = () => {
               </Alert>
             )}
 
-            {/* Step Content */}
+            {/* Step Content Area - Matching CreateCafePage */}
             <Box sx={{ 
-              minHeight: 400,
-              mb: 4,
-              p: 3,
-              backgroundColor: 'rgba(248, 250, 252, 0.5)',
-              borderRadius: 3,
-              border: '1px solid rgba(226, 232, 240, 0.5)'
+              minHeight: 300,
+              mb: 3,
+              p: 2.5,
+              backgroundColor: 'rgba(248, 250, 252, 0.3)',
+              borderRadius: '12px',
+              border: '1px solid rgba(226, 232, 240, 0.6)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': {
+                backgroundColor: 'rgba(248, 250, 252, 0.5)',
+                borderColor: 'rgba(59, 130, 246, 0.2)',
+              }
             }}>
               {getStepContent(activeStep)}
             </Box>
 
-            {/* Navigation Buttons */}
+            {/* Navigation Buttons - Matching CreateCafePage */}
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
               alignItems: 'center',
-              pt: 4,
+              pt: 3,
               borderTop: '1px solid rgba(226, 232, 240, 0.5)'
             }}>
               <Button 
                 disabled={activeStep === 0} 
                 onClick={handleBack} 
                 sx={{ 
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 2,
+                  px: 3,
+                  py: 1.2,
+                  borderRadius: '10px',
                   textTransform: 'none',
-                  fontSize: '1rem',
+                  fontSize: '0.9rem',
                   fontWeight: 600,
                   backgroundColor: 'rgba(0, 0, 0, 0.04)',
                   color: 'text.secondary',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   '&:hover': {
                     backgroundColor: 'rgba(0, 0, 0, 0.08)',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                   },
                   '&:disabled': {
                     backgroundColor: 'transparent',
@@ -629,18 +1068,19 @@ const EditCafePage = () => {
                   onClick={handleSubmit} 
                   disabled={loading || uploading}
                   sx={{
-                    px: 6,
-                    py: 1.5,
-                    borderRadius: 2,
+                    px: 5,
+                    py: 1.2,
+                    borderRadius: '10px',
                     textTransform: 'none',
-                    fontSize: '1rem',
+                    fontSize: '0.9rem',
                     fontWeight: 600,
-                    background: 'linear-gradient(135deg, #f57c00 0%, #e65100 100%)',
-                    boxShadow: '0 4px 14px 0 rgba(245, 124, 0, 0.39)',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    boxShadow: '0 4px 14px 0 rgba(16, 185, 129, 0.39)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     '&:hover': {
-                      background: 'linear-gradient(135deg, #e65100 0%, #bf360c 100%)',
-                      boxShadow: '0 6px 20px 0 rgba(245, 124, 0, 0.5)',
-                      transform: 'translateY(-1px)',
+                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                      boxShadow: '0 6px 20px 0 rgba(16, 185, 129, 0.5)',
+                      transform: 'translateY(-2px)',
                     },
                     '&:disabled': {
                       background: 'rgba(0, 0, 0, 0.12)',
@@ -649,25 +1089,26 @@ const EditCafePage = () => {
                     }
                   }}
                 >
-                  {loading || uploading ? 'Saving Changes...' : 'Save Changes'}
+                  {loading || uploading ? 'Saving Changes...' : 'Update Cafe'}
                 </Button>
               ) : (
                 <Button 
                   variant="contained" 
                   onClick={handleNext}
                   sx={{
-                    px: 6,
-                    py: 1.5,
-                    borderRadius: 2,
+                    px: 5,
+                    py: 1.2,
+                    borderRadius: '10px',
                     textTransform: 'none',
-                    fontSize: '1rem',
+                    fontSize: '0.9rem',
                     fontWeight: 600,
-                    background: 'linear-gradient(135deg, #f57c00 0%, #e65100 100%)',
-                    boxShadow: '0 4px 14px 0 rgba(245, 124, 0, 0.39)',
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                    boxShadow: '0 4px 14px 0 rgba(59, 130, 246, 0.39)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     '&:hover': {
-                      background: 'linear-gradient(135deg, #e65100 0%, #bf360c 100%)',
-                      boxShadow: '0 6px 20px 0 rgba(245, 124, 0, 0.5)',
-                      transform: 'translateY(-1px)',
+                      background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
+                      boxShadow: '0 6px 20px 0 rgba(59, 130, 246, 0.5)',
+                      transform: 'translateY(-2px)',
                     }
                   }}
                 >

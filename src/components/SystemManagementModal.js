@@ -23,11 +23,10 @@ const modalStyle = {
   maxHeight: '85vh',
   background: '#ffffff',
   boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-  p: 3,
+  p: 4,
   borderRadius: '12px',
   border: '1px solid #e2e8f0',
   overflow: 'auto',
-  zIndex: 9999,
 };
 
 // Helper function to calculate remaining time

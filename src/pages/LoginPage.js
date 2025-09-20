@@ -344,14 +344,14 @@ const LoginPage = () => {
           </Box>
 
           {/* Right Side - Login Form */}
-          <Box
-            sx={{
+      <Box
+        sx={{
               flex: 1,
               background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
               p: { xs: 3, md: 4 },
               pb: { xs: 4, md: 5 },
-              display: 'flex',
-              flexDirection: 'column',
+          display: 'flex',
+          flexDirection: 'column',
               justifyContent: 'center',
               minHeight: { xs: '350px', md: 'auto' },
               position: 'relative',
@@ -373,7 +373,7 @@ const LoginPage = () => {
                     <Box
                       sx={{
                         display: 'inline-flex',
-                        alignItems: 'center',
+          alignItems: 'center',
                         justifyContent: 'center',
                         width: 60,
                         height: 60,
@@ -417,10 +417,10 @@ const LoginPage = () => {
                       }}
                     >
                       Sign in to your cafe management dashboard
-                    </Typography>
+            </Typography>
                   </Box>
 
-                  <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+            <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
                     {error && (
                       <Alert
                         severity="error"
@@ -441,16 +441,16 @@ const LoginPage = () => {
                     )}
 
                     <Box sx={{ mb: 3 }}>
-                      <TextField
-                        fullWidth
-                        id="email"
-                        label="Email Address"
-                        name="email"
+              <TextField
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
                         type="email"
-                        autoComplete="email"
-                        autoFocus
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                         required
                         InputProps={{
                           startAdornment: (
@@ -491,15 +491,15 @@ const LoginPage = () => {
                     </Box>
 
                     <Box sx={{ mb: 4 }}>
-                      <TextField
-                        fullWidth
-                        name="password"
-                        label="Password"
+              <TextField
+                fullWidth
+                name="password"
+                label="Password"
                         type={showPassword ? 'text' : 'password'}
-                        id="password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                id="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                         required
                         InputProps={{
                           startAdornment: (
@@ -558,11 +558,11 @@ const LoginPage = () => {
                       />
                     </Box>
 
-                    <Button
-                      type="submit"
-                      fullWidth
-                      variant="contained"
-                      disabled={loading}
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={loading}
                       endIcon={loading ? <CircularProgress size={20} color="inherit" /> : <ArrowForward />}
                       sx={{
                         py: 1.5,
@@ -592,7 +592,7 @@ const LoginPage = () => {
                       }}
                     >
                       {loading ? 'Signing In...' : 'Sign In'}
-                    </Button>
+              </Button>
 
                     <Box sx={{ textAlign: 'center', mt: 4, mb: 2 }}>
                       <Typography 
@@ -605,7 +605,7 @@ const LoginPage = () => {
                           fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif'
                         }}
                       >
-                        Don't have an account?{' '}
+                Don't have an account?{' '}
                         <Link 
                           to="/register" 
                           style={{ 
@@ -626,15 +626,15 @@ const LoginPage = () => {
                           }}
                         >
                           Create one here
-                        </Link>
-                      </Typography>
-                    </Box>
+                </Link>
+              </Typography>
+            </Box>
                   </Box>
                 </Box>
               </Fade>
           </Box>
-        </Box>
-      </Container>
+      </Box>
+    </Container>
     </Box>
   );
 };

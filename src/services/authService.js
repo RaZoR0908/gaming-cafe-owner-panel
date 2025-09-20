@@ -21,10 +21,31 @@ const registerOwner = (name, email, password) => {
   });
 };
 
+// Generic register function that handles different user types
+const register = (userData) => {
+  const { fullName, email, password, role = 'cafeOwner' } = userData;
+  
+  if (role === 'cafeOwner') {
+    return axios.post(API_URL + 'register-owner', {
+      name: fullName,
+      email,
+      password,
+    });
+  } else {
+    // For other user types, use a generic register endpoint
+    return axios.post(API_URL + 'register', {
+      fullName,
+      email,
+      password,
+      role,
+    });
+  }
+};
 
 const authService = {
   login,
-  registerOwner, // Add the new function to the exported object
+  registerOwner,
+  register, // Add the generic register function
 };
 
 export default authService;

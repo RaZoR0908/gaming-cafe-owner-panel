@@ -39,6 +39,22 @@ const RegisterPage = () => {
     e.preventDefault();
     setError('');
 
+    // Client-side validation
+    if (!formData.fullName.trim()) {
+      setError('Full name is required');
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      setError('Email address is required');
+      return;
+    }
+
+    if (!formData.password) {
+      setError('Password is required');
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -49,9 +65,22 @@ const RegisterPage = () => {
       return;
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
     setLoading(true);
 
     try {
+      console.log('Attempting registration with data:', {
+        fullName: formData.fullName,
+        email: formData.email,
+        role: 'cafeOwner'
+      });
+
       const response = await authService.register({
         fullName: formData.fullName,
         email: formData.email,
@@ -59,13 +88,39 @@ const RegisterPage = () => {
         role: 'cafeOwner'
       });
 
-      if (response.data.token) {
+      console.log('Registration response:', response);
+
+      if (response.data && response.data.token) {
         localStorage.setItem('user', JSON.stringify(response.data));
         navigate('/dashboard');
+      } else {
+        setError('Registration successful but no token received. Please try logging in.');
       }
     } catch (err) {
-      const errorMessage =
-        (err.response?.data?.message) || 'Registration failed. Please try again.';
+      console.error('Registration error:', err);
+      console.error('Error response:', err.response);
+      
+      let errorMessage = 'Registration failed. Please try again.';
+      
+      if (err.response) {
+        // Server responded with error status
+        if (err.response.status === 400) {
+          errorMessage = err.response.data?.message || 'Invalid registration data. Please check your information.';
+        } else if (err.response.status === 409) {
+          errorMessage = 'An account with this email already exists. Please try logging in instead.';
+        } else if (err.response.status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else {
+          errorMessage = err.response.data?.message || `Registration failed (${err.response.status}). Please try again.`;
+        }
+      } else if (err.request) {
+        // Request was made but no response received
+        errorMessage = 'Unable to connect to server. Please check your internet connection and try again.';
+      } else {
+        // Something else happened
+        errorMessage = err.message || 'An unexpected error occurred. Please try again.';
+      }
+      
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -373,13 +428,13 @@ const RegisterPage = () => {
           </Box>
 
           {/* Right Side - Registration Form */}
-          <Box
-            sx={{
+      <Box
+        sx={{
               flex: 1,
               background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
               p: { xs: 2, md: 3 },
-              display: 'flex',
-              flexDirection: 'column',
+          display: 'flex',
+          flexDirection: 'column',
               justifyContent: 'center',
               minHeight: { xs: '350px', md: 'auto' },
               position: 'relative',
@@ -401,7 +456,7 @@ const RegisterPage = () => {
               <Box
                 sx={{
                   display: 'inline-flex',
-                  alignItems: 'center',
+          alignItems: 'center',
                   justifyContent: 'center',
                   width: 60,
                   height: 60,
@@ -445,10 +500,10 @@ const RegisterPage = () => {
                       }}
                     >
                       Join our platform and start managing your cafe
-              </Typography>
+            </Typography>
             </Box>
 
-                  <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+            <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
                 {error && (
                   <Alert 
                     severity="error" 
@@ -469,14 +524,14 @@ const RegisterPage = () => {
                 )}
 
                     <Box sx={{ mb: 2 }}>
-                  <TextField
-                    fullWidth
+              <TextField
+                fullWidth
                     id="fullName"
-                    label="Full Name"
+                label="Full Name"
                     name="fullName"
                     type="text"
-                    autoComplete="name"
-                    autoFocus
+                autoComplete="name"
+                autoFocus
                     value={formData.fullName}
                     onChange={handleChange}
                     required
@@ -519,13 +574,13 @@ const RegisterPage = () => {
                 </Box>
 
                     <Box sx={{ mb: 2 }}>
-                  <TextField
-                    fullWidth
-                    id="email"
-                    label="Email Address"
-                    name="email"
+              <TextField
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
                     type="email"
-                    autoComplete="email"
+                autoComplete="email"
                     value={formData.email}
                     onChange={handleChange}
                     required
@@ -568,13 +623,13 @@ const RegisterPage = () => {
                 </Box>
 
                     <Box sx={{ mb: 2 }}>
-                  <TextField
-                    fullWidth
-                    name="password"
-                    label="Password"
+              <TextField
+                fullWidth
+                name="password"
+                label="Password"
                     type={showPassword ? 'text' : 'password'}
-                    id="password"
-                    autoComplete="new-password"
+                id="password"
+                autoComplete="new-password"
                     value={formData.password}
                     onChange={handleChange}
                     required
@@ -703,11 +758,11 @@ const RegisterPage = () => {
                   />
                 </Box>
 
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  disabled={loading}
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={loading}
                       endIcon={loading ? <CircularProgress size={18} color="inherit" /> : <ArrowForward />}
                   sx={{
                         py: 1.2,
@@ -737,7 +792,7 @@ const RegisterPage = () => {
                   }}
                 >
                   {loading ? 'Creating Account...' : 'Create Account'}
-                </Button>
+              </Button>
 
                     <Box sx={{ textAlign: 'center', mt: 3, mb: 2 }}>
                       <Typography 
@@ -750,7 +805,7 @@ const RegisterPage = () => {
                           fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif'
                         }}
                       >
-                    Already have an account?{' '}
+                Already have an account?{' '}
                     <Link 
                       to="/" 
                       style={{ 
@@ -771,15 +826,15 @@ const RegisterPage = () => {
                       }}
                     >
                       Sign in here
-                    </Link>
-                  </Typography>
-                </Box>
+                </Link>
+              </Typography>
+            </Box>
               </Box>
                 </Box>
         </Fade>
           </Box>
-        </Box>
-      </Container>
+      </Box>
+    </Container>
     </Box>
   );
 };

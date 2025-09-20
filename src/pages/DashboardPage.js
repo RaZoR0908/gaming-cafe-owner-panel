@@ -731,40 +731,334 @@ const DashboardPage = () => {
     return (
       <Box sx={{ flexGrow: 1, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
         {/* Header */}
-        <AppBar position="static" sx={{ backgroundColor: '#1976d2' }}>
-          <Toolbar>
-            <DashboardIcon sx={{ mr: 2 }} />
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+        <AppBar position="static" sx={{ 
+          background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+        }}>
+          <Toolbar sx={{ py: 1.5, minHeight: '60px' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mr: 2,
+                flexShrink: 0
+              }}>
+                <Box sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)',
+                  border: '2px solid rgba(255, 255, 255, 0.1)'
+                }}>
+                  <DashboardIcon sx={{ fontSize: 20, color: 'white' }} />
+                </Box>
+              </Box>
+              
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    color: 'white', 
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                    letterSpacing: '0.5px',
+                    textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    maxWidth: '100%'
+                  }}
+                >
               Welcome to Gaming Cafe Dashboard
             </Typography>
-            <Button color="inherit" onClick={handleLogout}>Logout</Button>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: 'rgba(255, 255, 255, 0.8)', 
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    letterSpacing: '0.3px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    maxWidth: '100%'
+                  }}
+                >
+                  Get Started With Your Gaming Cafe Management
+                </Typography>
+              </Box>
+            </Box>
+            <Button 
+              color="inherit" 
+              onClick={handleLogout}
+              sx={{
+                px: 2,
+                py: 1,
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                textTransform: 'none',
+                borderRadius: '8px',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  transform: 'translateY(-1px)'
+                }
+              }}
+            >
+              Logout
+            </Button>
           </Toolbar>
         </AppBar>
 
-        {/* Main Content */}
-        <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-          <Box sx={{ 
+        {/* Main Content - Side by Side Layout */}
+        <Container maxWidth="xl" sx={{ flex: 1, display: 'flex', alignItems: 'center', py: 1 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              width: '100%',
+              minHeight: '50vh',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 12px 25px rgba(0, 0, 0, 0.2), 0 6px 12px rgba(0, 0, 0, 0.1)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+          >
+            {/* Left Side - Information */}
+            <Box
+              sx={{
+                flex: 1,
+                background: 'linear-gradient(135deg, #1e293b 0%, #334155 50%, #1e293b 100%)',
+                color: 'white',
+                p: { xs: 2, md: 3 },
             display: 'flex', 
             flexDirection: 'column', 
-            alignItems: 'center', 
-            textAlign: 'center',
-            bgcolor: 'white',
-            p: 4,
-            borderRadius: 3,
-            boxShadow: 3
-          }}>
-            <BusinessIcon sx={{ fontSize: 60, color: '#1976d2', mb: 2 }} />
-            <Typography variant="h5" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+                justifyContent: 'center',
+                minHeight: { xs: '250px', md: 'auto' },
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'linear-gradient(45deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%)',
+                  zIndex: 1
+                }
+              }}
+            >
+              <Box sx={{ textAlign: 'center', position: 'relative', zIndex: 2 }}>
+                <BusinessIcon sx={{ 
+                  fontSize: 50, 
+                  mb: 1.5, 
+                  color: '#ffffff',
+                  filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5))',
+                  textShadow: '0 0 15px rgba(255, 255, 255, 0.3)'
+                }} />
+                
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    fontWeight: 800,
+                    mb: 1,
+                    fontSize: { xs: '1.3rem', md: '1.5rem' },
+                    textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(255, 255, 255, 0.4)',
+                    letterSpacing: '0.5px',
+                    color: '#ffffff'
+                  }}
+                >
               Welcome to Your Dashboard!
             </Typography>
-            <Typography variant="h6" sx={{ mb: 1, color: 'text.secondary' }}>
+                
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    mb: 1.5, 
+                    fontWeight: 600,
+                    fontSize: { xs: '1rem', md: '1.1rem' },
+                    textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7), 0 0 8px rgba(255, 255, 255, 0.2)',
+                    lineHeight: 1.4,
+                    color: '#e2e8f0',
+                    letterSpacing: '0.3px'
+                  }}
+                >
               {user ? `Hello, ${user.name}!` : 'Hello, Cafe Owner!'}
             </Typography>
-            <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary', maxWidth: 500 }}>
-              It looks like you haven't created your gaming cafe yet. Let's get started by setting up your cafe profile.
+                
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    mb: 2, 
+                    fontWeight: 500,
+                    fontSize: { xs: '0.85rem', md: '0.9rem' },
+                    textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7), 0 0 8px rgba(255, 255, 255, 0.2)',
+                    lineHeight: 1.5,
+                    color: '#cbd5e1',
+                    letterSpacing: '0.3px',
+                    textTransform: 'capitalize',
+                    px: 1
+                  }}
+                >
+                  Create your cafe owner account and start managing your business
             </Typography>
             
-            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1.5 }}>
+                  {[
+                    { icon: <ComputerIcon />, text: 'Manage gaming systems and room bookings' },
+                    { icon: <PersonIcon />, text: 'Handle walk-in customers and reservations' },
+                    { icon: <TrendingUpIcon />, text: 'Track revenue and customer reviews' },
+                    { icon: <TimerIcon />, text: 'Monitor system status and maintenance' }
+                  ].map((feature, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        p: 1.5,
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        borderRadius: 2,
+                        border: '1px solid rgba(255, 255, 255, 0.25)',
+                        backdropFilter: 'blur(10px)',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                          transform: 'translateX(5px)',
+                          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
+                          border: '1px solid rgba(255, 255, 255, 0.4)'
+                        }
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 28,
+                          height: 28,
+                          backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                          borderRadius: '50%',
+                          mr: 1.5,
+                          flexShrink: 0,
+                          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)'
+                        }}
+                      >
+                        {React.cloneElement(feature.icon, { 
+                          sx: { 
+                            color: '#ffffff', 
+                            fontSize: 14,
+                            filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))'
+                          } 
+                        })}
+                      </Box>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#ffffff', 
+                          fontWeight: 600,
+                          fontSize: '0.8rem',
+                          textShadow: '1px 1px 2px rgba(0, 0, 0, 0.6), 0 0 6px rgba(255, 255, 255, 0.2)',
+                          letterSpacing: '0.3px',
+                          lineHeight: 1.3
+                        }}
+                      >
+                        {feature.text}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Right Side - Create Cafe Form */}
+            <Box
+              sx={{
+                flex: 1,
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                p: { xs: 2, md: 3 },
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                minHeight: { xs: '250px', md: 'auto' },
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'linear-gradient(45deg, rgba(59, 130, 246, 0.02) 0%, rgba(147, 51, 234, 0.02) 100%)',
+                  zIndex: 1
+                }
+              }}
+            >
+              <Box sx={{ position: 'relative', zIndex: 2 }}>
+                <Box sx={{ textAlign: 'center', mb: 3 }}>
+                  <Box
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 60,
+                      height: 60,
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                      border: '2px solid rgba(59, 130, 246, 0.2)',
+                      mb: 2,
+                      boxShadow: '0 6px 20px rgba(59, 130, 246, 0.3)',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'scale(1.05)',
+                        boxShadow: '0 8px 25px rgba(59, 130, 246, 0.4)'
+                      }
+                    }}
+                  >
+                    <AddIcon sx={{ fontSize: 30, color: 'white' }} />
+                  </Box>
+                  
+                  <Typography 
+                    variant="h5" 
+                    component="h2" 
+                    sx={{ 
+                      fontWeight: 700, 
+                      mb: 1.5, 
+                      color: '#1e293b',
+                      fontSize: { xs: '1.3rem', md: '1.5rem' },
+                      letterSpacing: '0.3px'
+                    }}
+                  >
+                    Create Your Cafe
+                  </Typography>
+                  
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: '#64748b',
+                      fontSize: { xs: '0.9rem', md: '1rem' },
+                      fontWeight: 600,
+                      lineHeight: 1.5,
+                      letterSpacing: '0.3px',
+                      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+                      textTransform: 'capitalize',
+                      mb: 3,
+                      px: 1
+                    }}
+                  >
+                    It looks like you haven't created your gaming cafe yet. Let's get started by setting up your cafe profile and begin your journey in the gaming industry.
+                  </Typography>
+                </Box>
+
+                {/* Action Buttons */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               <Button 
                 variant="contained" 
                 size="large"
@@ -772,47 +1066,51 @@ const DashboardPage = () => {
                 to="/create-cafe"
                 startIcon={<AddIcon />}
                 sx={{ 
-                  px: 3, 
-                  py: 1,
+                      py: 1.5,
                   fontSize: '1rem',
-                  fontWeight: 'bold'
+                      fontWeight: 700,
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                      boxShadow: '0 8px 25px rgba(59, 130, 246, 0.3), 0 4px 12px rgba(59, 130, 246, 0.15)',
+                      textTransform: 'none',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 12px 35px rgba(59, 130, 246, 0.4), 0 6px 20px rgba(59, 130, 246, 0.2)',
+                      }
                 }}
               >
                 Create Your Cafe
               </Button>
+                  
               <Button 
                 variant="outlined" 
                 size="large"
                 onClick={() => window.location.reload()}
                 startIcon={<RefreshIcon />}
-                sx={{ px: 3, py: 1 }}
-              >
-                Refresh
+                    sx={{
+                      py: 1.5,
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      borderRadius: '12px',
+                      borderColor: '#cbd5e1',
+                      color: '#475569',
+                      backgroundColor: 'rgba(248, 250, 252, 0.8)',
+                      textTransform: 'none',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        borderColor: '#94a3b8',
+                        backgroundColor: '#f1f5f9',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)',
+                      }
+                    }}
+                  >
+                    Refresh Status
               </Button>
-            </Stack>
-
-            <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, maxWidth: 500 }}>
-              <Typography variant="subtitle1" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
-                What you'll be able to do:
-              </Typography>
-              <Stack spacing={0.5} sx={{ textAlign: 'left' }}>
-                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
-                  <PlayArrowIcon sx={{ fontSize: 14, mr: 1, color: 'success.main' }} />
-                  Manage gaming systems and room bookings
-                </Typography>
-                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
-                  <PlayArrowIcon sx={{ fontSize: 14, mr: 1, color: 'success.main' }} />
-                  Handle walk-in customers and reservations
-                </Typography>
-                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
-                  <PlayArrowIcon sx={{ fontSize: 14, mr: 1, color: 'success.main' }} />
-                  Track revenue and customer reviews
-                </Typography>
-                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
-                  <PlayArrowIcon sx={{ fontSize: 14, mr: 1, color: 'success.main' }} />
-                  Monitor system status and maintenance
-                </Typography>
-              </Stack>
+                </Box>
+              </Box>
             </Box>
           </Box>
         </Container>
@@ -828,52 +1126,108 @@ const DashboardPage = () => {
       position: 'relative'
     }}>
 
-      {/* Clean Light Header */}
+      {/* Premium Light Theme Header */}
       <AppBar 
         position="static" 
         sx={{ 
-          background: '#ffffff',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          borderBottom: '1px solid #e2e8f0',
+          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%)',
+          boxShadow: '0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
           color: '#1e293b',
-          position: 'relative'
+          position: 'relative',
+          backdropFilter: 'blur(10px)',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 25%, #06b6d4 50%, #10b981 75%, #f59e0b 100%)',
+            zIndex: 1
+          },
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.03) 0%, transparent 50%)',
+            zIndex: 1
+          }
         }}
       >
-        <Toolbar sx={{ py: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+        <Toolbar sx={{ py: 2, position: 'relative', zIndex: 2, minHeight: '70px' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1, minWidth: 0, mr: 2 }}>
+            {/* Compact Logo Container */}
             <Box
               sx={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 48,
-                height: 48,
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)'
+                width: 50,
+                height: 50,
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #1e40af 100%)',
+                boxShadow: '0 6px 20px rgba(59, 130, 246, 0.25), 0 3px 8px rgba(59, 130, 246, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                position: 'relative',
+                flexShrink: 0,
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: '-2px',
+                  left: '-2px',
+                  right: '-2px',
+                  bottom: '-2px',
+                  borderRadius: '18px',
+                  background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 25%, #1d4ed8 50%, #1e40af 100%)',
+                  zIndex: -1,
+                  opacity: 0.3
+                }
               }}
             >
-              <DashboardIcon sx={{ fontSize: 24, color: '#ffffff' }} />
+              <DashboardIcon sx={{ 
+                fontSize: 26, 
+                color: '#ffffff', 
+                filter: 'drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3))',
+                zIndex: 2,
+                position: 'relative'
+              }} />
             </Box>
-            <Box>
+            
+            {/* Title Section with Better Spacing */}
+            <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
               <Typography 
                 variant="h5" 
                 component="div" 
                 sx={{ 
                   fontWeight: 700, 
                   lineHeight: 1.2,
-                  color: '#1e293b',
-                  fontSize: { xs: '1.3rem', md: '1.5rem' }
+                  color: '#0f172a',
+                  fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' },
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+                  letterSpacing: '-0.02em',
+                  mb: 0.3,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '100%'
                 }}
               >
-                {myCafe?.name || 'Cafe Dashboard'}
-              </Typography>
+            {myCafe?.name || 'Cafe Dashboard'}
+          </Typography>
               <Typography 
                 variant="body2" 
                 sx={{ 
                   color: '#64748b', 
-                  fontSize: '0.875rem',
-                  fontWeight: 500
+                  fontSize: { xs: '0.85rem', sm: '0.9rem' },
+                  fontWeight: 500,
+                  letterSpacing: '0.02em',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '100%'
                 }}
               >
                 Welcome back, {user ? user.name : 'Owner'}!
@@ -881,67 +1235,90 @@ const DashboardPage = () => {
             </Box>
           </Box>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {/* Compact Action Buttons */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+            {/* Refresh Button */}
             <Button 
               color="inherit" 
               onClick={handleRefreshStatus} 
               disabled={refreshing}
-              startIcon={<RefreshIcon />}
+              startIcon={<RefreshIcon sx={{ fontSize: 18 }} />}
               sx={{
-                backgroundColor: '#f1f5f9',
-                border: '1px solid #e2e8f0',
-                borderRadius: 1,
+                background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                border: '1px solid #cbd5e1',
+                borderRadius: '10px',
                 px: 2,
                 py: 1,
                 textTransform: 'none',
                 fontWeight: 600,
-                color: '#64748b',
+                color: '#475569',
+                fontSize: '0.8rem',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                  backgroundColor: '#e2e8f0',
-                  transform: 'translateY(-1px)',
+                  background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
+                  borderColor: '#94a3b8',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
                 },
                 '&:disabled': {
-                  opacity: 0.5
+                  opacity: 0.6,
+                  transform: 'none',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
                 }
               }}
             >
               Refresh Status
-            </Button>
+          </Button>
+            
+            {/* Tips Button */}
             <Button 
               color="inherit" 
               onClick={() => setTipsModalOpen(true)}
               sx={{
-                backgroundColor: '#f1f5f9',
-                border: '1px solid #e2e8f0',
-                borderRadius: 1,
+                background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                border: '1px solid #fbbf24',
+                borderRadius: '10px',
                 px: 2,
                 py: 1,
                 textTransform: 'none',
                 fontWeight: 600,
-                color: '#64748b',
+                color: '#92400e',
+                fontSize: '0.8rem',
+                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                  backgroundColor: '#e2e8f0',
-                  transform: 'translateY(-1px)',
+                  background: 'linear-gradient(135deg, #fde68a 0%, #fbbf24 100%)',
+                  borderColor: '#f59e0b',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 20px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
                 }
               }}
             >
-              💡 Tips & Help
-            </Button>
+            💡 Tips & Help
+          </Button>
+            
+            {/* Logout Button */}
             <Button 
               color="inherit" 
               onClick={handleLogout}
               sx={{
-                backgroundColor: '#fef2f2',
-                border: '1px solid #fecaca',
-                borderRadius: 1,
+                background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                border: '1px solid #fca5a5',
+                borderRadius: '10px',
                 px: 2,
                 py: 1,
                 textTransform: 'none',
                 fontWeight: 600,
                 color: '#dc2626',
+                fontSize: '0.8rem',
+                boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                  backgroundColor: '#fee2e2',
-                  transform: 'translateY(-1px)',
+                  background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+                  borderColor: '#f87171',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 20px rgba(220, 38, 38, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
                 }
               }}
             >
@@ -1019,10 +1396,10 @@ const DashboardPage = () => {
               Quick Navigation
             </Typography>
             <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 2 }}>
-              <Button 
-                variant={currentView === 'dashboard' ? 'contained' : 'outlined'}
-                onClick={() => setCurrentView('dashboard')}
-                startIcon={<DashboardIcon />}
+          <Button 
+            variant={currentView === 'dashboard' ? 'contained' : 'outlined'}
+            onClick={() => setCurrentView('dashboard')}
+            startIcon={<DashboardIcon />}
                 size="large"
                 sx={{ 
                   py: 1.5, 
@@ -1031,22 +1408,25 @@ const DashboardPage = () => {
                   textTransform: 'none',
                   fontWeight: 600,
                   minWidth: 140,
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   background: currentView === 'dashboard' ? 
                     'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)' : 'transparent',
                   '&:hover': {
                     background: currentView === 'dashboard' ? 
                       'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)' : 
-                      'rgba(25, 118, 210, 0.04)',
-                    transform: 'translateY(-1px)',
+                      'linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(25, 118, 210, 0.04) 100%)',
+                    transform: 'translateY(-3px)',
+                    boxShadow: '0 8px 25px rgba(25, 118, 210, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+                    borderColor: currentView === 'dashboard' ? '#0d47a1' : '#1976d2',
                   }
                 }}
-              >
-                Overview
-              </Button>
-              <Button 
-                variant={currentView === 'bookings' ? 'contained' : 'outlined'}
-                onClick={() => setCurrentView('bookings')}
-                startIcon={<BookingsIcon />}
+          >
+            Overview
+          </Button>
+          <Button 
+            variant={currentView === 'bookings' ? 'contained' : 'outlined'}
+            onClick={() => setCurrentView('bookings')}
+            startIcon={<BookingsIcon />}
                 size="large"
                 sx={{ 
                   py: 1.5, 
@@ -1055,22 +1435,25 @@ const DashboardPage = () => {
                   textTransform: 'none',
                   fontWeight: 600,
                   minWidth: 140,
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   background: currentView === 'bookings' ? 
                     'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)' : 'transparent',
                   '&:hover': {
                     background: currentView === 'bookings' ? 
                       'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)' : 
-                      'rgba(25, 118, 210, 0.04)',
-                    transform: 'translateY(-1px)',
+                      'linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(25, 118, 210, 0.04) 100%)',
+                    transform: 'translateY(-3px)',
+                    boxShadow: '0 8px 25px rgba(25, 118, 210, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+                    borderColor: currentView === 'bookings' ? '#0d47a1' : '#1976d2',
                   }
                 }}
-              >
-                Bookings
-              </Button>
-              <Button 
-                variant="outlined"
-                onClick={handleOpenSystemManagement}
-                startIcon={<ComputerIcon />}
+          >
+            Bookings
+          </Button>
+          <Button 
+            variant="outlined"
+            onClick={handleOpenSystemManagement}
+            startIcon={<ComputerIcon />}
                 size="large"
                 sx={{ 
                   py: 1.5, 
@@ -1079,22 +1462,24 @@ const DashboardPage = () => {
                   textTransform: 'none',
                   fontWeight: 600,
                   minWidth: 180,
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   borderColor: '#9c27b0',
                   color: '#9c27b0',
                   '&:hover': {
-                    backgroundColor: 'rgba(156, 39, 176, 0.04)',
+                    background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.08) 0%, rgba(156, 39, 176, 0.04) 100%)',
                     borderColor: '#7b1fa2',
                     color: '#7b1fa2',
-                    transform: 'translateY(-1px)',
+                    transform: 'translateY(-3px)',
+                    boxShadow: '0 8px 25px rgba(156, 39, 176, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
                   }
                 }}
-              >
-                System Management
-              </Button>
-              <Button 
-                variant={currentView === 'reviews' ? 'contained' : 'outlined'}
-                onClick={() => setCurrentView('reviews')}
-                startIcon={<ReviewsIcon />}
+          >
+            System Management
+          </Button>
+          <Button 
+            variant={currentView === 'reviews' ? 'contained' : 'outlined'}
+            onClick={() => setCurrentView('reviews')}
+            startIcon={<ReviewsIcon />}
                 size="large"
                 sx={{ 
                   py: 1.5, 
@@ -1103,22 +1488,25 @@ const DashboardPage = () => {
                   textTransform: 'none',
                   fontWeight: 600,
                   minWidth: 140,
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   background: currentView === 'reviews' ? 
                     'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)' : 'transparent',
                   '&:hover': {
                     background: currentView === 'reviews' ? 
                       'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)' : 
-                      'rgba(25, 118, 210, 0.04)',
-                    transform: 'translateY(-1px)',
+                      'linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(25, 118, 210, 0.04) 100%)',
+                    transform: 'translateY(-3px)',
+                    boxShadow: '0 8px 25px rgba(25, 118, 210, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+                    borderColor: currentView === 'reviews' ? '#0d47a1' : '#1976d2',
                   }
                 }}
-              >
-                Reviews
-              </Button>
-              <Button 
-                variant={currentView === 'cafe' ? 'contained' : 'outlined'}
-                onClick={() => setCurrentView('cafe')}
-                startIcon={<BusinessIcon />}
+          >
+            Reviews
+          </Button>
+          <Button 
+            variant={currentView === 'cafe' ? 'contained' : 'outlined'}
+            onClick={() => setCurrentView('cafe')}
+            startIcon={<BusinessIcon />}
                 size="large"
                 sx={{ 
                   py: 1.5, 
@@ -1127,23 +1515,26 @@ const DashboardPage = () => {
                   textTransform: 'none',
                   fontWeight: 600,
                   minWidth: 140,
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   background: currentView === 'cafe' ? 
                     'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)' : 'transparent',
                   '&:hover': {
                     background: currentView === 'cafe' ? 
                       'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)' : 
-                      'rgba(25, 118, 210, 0.04)',
-                    transform: 'translateY(-1px)',
+                      'linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(25, 118, 210, 0.04) 100%)',
+                    transform: 'translateY(-3px)',
+                    boxShadow: '0 8px 25px rgba(25, 118, 210, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+                    borderColor: currentView === 'cafe' ? '#0d47a1' : '#1976d2',
                   }
                 }}
-              >
-                Cafe Settings
-              </Button>
-            </Stack>
+          >
+            Cafe Settings
+          </Button>
+        </Stack>
           </Box>
         </Paper>
 
-        {/* Professional Stats Cards */}
+        {/* Uniform Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           {/* First Row - 2 cards */}
           <Grid item xs={12} sm={6} md={6}>
@@ -1157,6 +1548,7 @@ const DashboardPage = () => {
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                 position: 'relative',
+                height: '120px', // Fixed height for all cards
                 '&::before': {
                   content: '""',
                   position: 'absolute',
@@ -1168,13 +1560,13 @@ const DashboardPage = () => {
                 }
               }}
             >
-              <CardContent sx={{ p: 3 }}>
+              <CardContent sx={{ p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#1976d2', mb: 1 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#1976d2', mb: 0.5, fontSize: '1.8rem' }}>
                       {stats.todayBookings}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.9rem' }}>
                       Today's Bookings
                     </Typography>
                   </Box>
@@ -1183,14 +1575,15 @@ const DashboardPage = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: 60,
-                      height: 60,
+                      width: 50,
+                      height: 50,
                       borderRadius: '50%',
                       backgroundColor: 'rgba(25, 118, 210, 0.1)',
-                      backdropFilter: 'blur(10px)'
+                      backdropFilter: 'blur(10px)',
+                      flexShrink: 0
                     }}
                   >
-                    <AccessTimeIcon sx={{ fontSize: 28, color: '#1976d2' }} />
+                    <AccessTimeIcon sx={{ fontSize: 24, color: '#1976d2' }} />
                   </Box>
                 </Box>
               </CardContent>
@@ -1207,6 +1600,7 @@ const DashboardPage = () => {
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                 position: 'relative',
+                height: '120px', // Fixed height for all cards
                 '&::before': {
                   content: '""',
                   position: 'absolute',
@@ -1218,13 +1612,13 @@ const DashboardPage = () => {
                 }
               }}
             >
-              <CardContent sx={{ p: 3 }}>
+              <CardContent sx={{ p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#9c27b0', mb: 1 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#9c27b0', mb: 0.5, fontSize: '1.8rem' }}>
                       {stats.confirmedBookings}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.9rem' }}>
                       Active Bookings
                     </Typography>
                   </Box>
@@ -1233,14 +1627,15 @@ const DashboardPage = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: 60,
-                      height: 60,
+                      width: 50,
+                      height: 50,
                       borderRadius: '50%',
                       backgroundColor: 'rgba(156, 39, 176, 0.1)',
-                      backdropFilter: 'blur(10px)'
+                      backdropFilter: 'blur(10px)',
+                      flexShrink: 0
                     }}
                   >
-                    <BookingsIcon sx={{ fontSize: 28, color: '#9c27b0' }} />
+                    <BookingsIcon sx={{ fontSize: 24, color: '#9c27b0' }} />
                   </Box>
                 </Box>
               </CardContent>
@@ -1259,6 +1654,7 @@ const DashboardPage = () => {
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                 position: 'relative',
+                height: '120px', // Fixed height for all cards
                 '&::before': {
                   content: '""',
                   position: 'absolute',
@@ -1270,13 +1666,13 @@ const DashboardPage = () => {
                 }
               }}
             >
-              <CardContent sx={{ p: 3 }}>
+              <CardContent sx={{ p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: '#2e7d32', mb: 1 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#2e7d32', mb: 0.5, fontSize: '1.8rem' }}>
                       ₹{stats.totalRevenue.toLocaleString()}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.9rem' }}>
                       Total Revenue
                     </Typography>
                   </Box>
@@ -1289,7 +1685,8 @@ const DashboardPage = () => {
                       height: 50,
                       borderRadius: '50%',
                       backgroundColor: 'rgba(46, 125, 50, 0.1)',
-                      backdropFilter: 'blur(10px)'
+                      backdropFilter: 'blur(10px)',
+                      flexShrink: 0
                     }}
                   >
                     <TrendingUpIcon sx={{ fontSize: 24, color: '#2e7d32' }} />
@@ -1309,6 +1706,7 @@ const DashboardPage = () => {
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                 position: 'relative',
+                height: '120px', // Fixed height for all cards
                 '&::before': {
                   content: '""',
                   position: 'absolute',
@@ -1320,13 +1718,13 @@ const DashboardPage = () => {
                 }
               }}
             >
-              <CardContent sx={{ p: 3 }}>
+              <CardContent sx={{ p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: '#00796b', mb: 1 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#00796b', mb: 0.5, fontSize: '1.8rem' }}>
                       ₹{stats.dailyRevenue.toLocaleString()}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.9rem' }}>
                       Today's Revenue
                     </Typography>
                   </Box>
@@ -1339,7 +1737,8 @@ const DashboardPage = () => {
                       height: 50,
                       borderRadius: '50%',
                       backgroundColor: 'rgba(0, 121, 107, 0.1)',
-                      backdropFilter: 'blur(10px)'
+                      backdropFilter: 'blur(10px)',
+                      flexShrink: 0
                     }}
                   >
                     <TrendingUpIcon sx={{ fontSize: 24, color: '#00796b' }} />
@@ -1359,6 +1758,7 @@ const DashboardPage = () => {
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                 position: 'relative',
+                height: '120px', // Fixed height for all cards
                 '&::before': {
                   content: '""',
                   position: 'absolute',
@@ -1370,13 +1770,13 @@ const DashboardPage = () => {
                 }
               }}
             >
-              <CardContent sx={{ p: 3 }}>
+              <CardContent sx={{ p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: '#f57c00', mb: 1 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#f57c00', mb: 0.5, fontSize: '1.8rem' }}>
                       {stats.averageRating}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.9rem' }}>
                       Avg Rating ({stats.totalReviews})
                     </Typography>
                   </Box>
@@ -1389,7 +1789,8 @@ const DashboardPage = () => {
                       height: 50,
                       borderRadius: '50%',
                       backgroundColor: 'rgba(245, 124, 0, 0.1)',
-                      backdropFilter: 'blur(10px)'
+                      backdropFilter: 'blur(10px)',
+                      flexShrink: 0
                     }}
                   >
                     <ReviewsIcon sx={{ fontSize: 24, color: '#f57c00' }} />
@@ -1439,7 +1840,7 @@ const DashboardPage = () => {
                     </Box>
                     <Typography variant="h5" sx={{ color: '#1976d2', fontWeight: 700 }}>
                       Cafe Information
-                    </Typography>
+                  </Typography>
                   </Box>
                   
                   <Typography variant="h4" sx={{ mb: 2, fontSize: '1.5rem', fontWeight: 700, color: 'text.primary' }}>
@@ -1452,12 +1853,12 @@ const DashboardPage = () => {
                     </Typography>
                     <Typography variant="body1" color="text.secondary" sx={{ mb: 1.5, lineHeight: 1.6 }}>
                       <strong>📞 Contact:</strong> {myCafe?.contactNumber || 'Not provided'}
-                    </Typography>
-                    {myCafe?.description && (
+                  </Typography>
+                  {myCafe?.description && (
                       <Typography variant="body1" color="text.secondary" sx={{ mb: 1.5, fontStyle: 'italic', lineHeight: 1.6 }}>
                         <strong>📝 Description:</strong> {myCafe.description}
-                      </Typography>
-                    )}
+                    </Typography>
+                  )}
                   </Box>
                   
                   {/* Cafe Open/Close Toggle */}
@@ -1650,21 +2051,21 @@ const DashboardPage = () => {
                 flexWrap: 'wrap'
               }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <FilterListIcon color="primary" />
-                  <TextField
-                    type="date"
-                    label="Filter by Date"
-                    size="small"
-                    value={filterDate}
-                    onChange={(e) => setFilterDate(e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ minWidth: 200 }}
-                  />
+                <FilterListIcon color="primary" />
+                <TextField
+                  type="date"
+                  label="Filter by Date"
+                  size="small"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 200 }}
+                />
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button variant="outlined" onClick={() => setFilterDate('')}>
-                    Clear
-                  </Button>
+                <Button variant="outlined" onClick={() => setFilterDate('')}>
+                  Clear
+                </Button>
                   <Button 
                     variant="contained" 
                     color="success"
@@ -1678,7 +2079,7 @@ const DashboardPage = () => {
                     }}
                   >
                     Download PDF
-                  </Button>
+                </Button>
                 </Box>
               </Box>
 
@@ -2127,8 +2528,8 @@ const DashboardPage = () => {
                                   }}
                                 >
                                   {booking.extensionPaymentStatus === 'completed' ? 'Paid' : 
-                                   booking.extensionPaymentStatus === 'pending' ? 'Pending' : 
-                                   booking.extensionPaymentStatus === 'failed' ? 'Failed' : 'Not Set'}
+                                         booking.extensionPaymentStatus === 'pending' ? 'Pending' : 
+                                         booking.extensionPaymentStatus === 'failed' ? 'Failed' : 'Not Set'}
                                 </Typography>
                               </Box>
                             ) : (
