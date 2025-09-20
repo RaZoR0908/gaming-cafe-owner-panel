@@ -1511,7 +1511,7 @@ const DashboardPage = () => {
                 </Typography>
               </Paper>
 
-              {/* Simple Table */}
+              {/* Optimized Responsive Table */}
               <TableContainer 
                 component={Paper} 
                 sx={{ 
@@ -1532,20 +1532,24 @@ const DashboardPage = () => {
                   '& .MuiTableCell-root': {
                     borderRight: '1px solid #e0e0e0',
                     borderBottom: '1px solid #e0e0e0',
+                    padding: '8px 6px',
+                    fontSize: '0.85rem',
+                    lineHeight: 1.3,
                     '&:last-child': {
                       borderRight: 'none'
                     }
                   },
                   '& .MuiTableHead-root .MuiTableCell-root': {
                     borderBottom: '2px solid #1976d2',
-                    fontWeight: 'bold'
+                    fontWeight: 'bold',
+                    fontSize: '0.8rem',
+                    padding: '10px 6px'
                   }
                 }}
               >
                 <Table stickyHeader size="small" sx={{ 
                   tableLayout: 'fixed',
-                  width: '100%',
-                  minWidth: '1200px'
+                  width: '100%'
                 }}>
                   <TableHead>
                     <TableRow>
@@ -1558,8 +1562,7 @@ const DashboardPage = () => {
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          width: '3%',
-                          minWidth: '40px'
+                          width: '4%'
                         }}
                       >
                         #
@@ -1572,8 +1575,7 @@ const DashboardPage = () => {
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          width: '9%',
-                          minWidth: '85px'
+                          width: '10%'
                         }}
                       >
                         Customer
@@ -1586,14 +1588,13 @@ const DashboardPage = () => {
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          width: '7%',
-                          minWidth: '50px'
+                          width: '9%'
                         }}
                         title="When the booking was made"
                       >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <AccessTimeIcon sx={{ fontSize: 14 }} />
-                          Date & Time
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, flexWrap: 'wrap' }}>
+                          <AccessTimeIcon sx={{ fontSize: 12 }} />
+                          <span>Date</span>
                         </Box>
                       </TableCell>
                       <TableCell 
@@ -1604,14 +1605,13 @@ const DashboardPage = () => {
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          width: '8%',
-                          minWidth: '70px'
+                          width: '9%'
                         }}
                         title="When the actual gaming session started"
                       >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <TimerIcon sx={{ fontSize: 14 }} />
-                          Session Start
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, flexWrap: 'wrap' }}>
+                          <TimerIcon sx={{ fontSize: 12 }} />
+                          <span>Session</span>
                         </Box>
                       </TableCell>
                       <TableCell 
@@ -1622,8 +1622,7 @@ const DashboardPage = () => {
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          width: '9%',
-                          minWidth: '85px'
+                          width: '11%'
                         }}
                       >
                         Room/System
@@ -1636,11 +1635,10 @@ const DashboardPage = () => {
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          width: '8%',
-                          minWidth: '60px'
+                          width: '10%'
                         }}
                       >
-                        Systems
+                        Assigned
                       </TableCell>
                       <TableCell 
                         sx={{ 
@@ -1651,8 +1649,7 @@ const DashboardPage = () => {
                           top: 0,
                           zIndex: 11,
                           textAlign: 'center',
-                          width: '7%',
-                          minWidth: '60px'
+                          width: '7%'
                         }}
                       >
                         Duration
@@ -1666,8 +1663,7 @@ const DashboardPage = () => {
                           top: 0,
                           zIndex: 11,
                           textAlign: 'center',
-                          width: '7%',
-                          minWidth: '60px'
+                          width: '7%'
                         }}
                       >
                         Extended
@@ -1681,11 +1677,10 @@ const DashboardPage = () => {
                           top: 0,
                           zIndex: 11,
                           textAlign: 'center',
-                          width: '6%',
-                          minWidth: '55px'
+                          width: '8%'
                         }}
                       >
-                        Extension Fee
+                        Ext. Fee
                       </TableCell>
                       <TableCell 
                         sx={{ 
@@ -1696,8 +1691,7 @@ const DashboardPage = () => {
                           top: 0,
                           zIndex: 11,
                           textAlign: 'right',
-                          width: '6%',
-                          minWidth: '50px'
+                          width: '9%'
                         }}
                       >
                         Price
@@ -1711,8 +1705,7 @@ const DashboardPage = () => {
                           top: 0,
                           zIndex: 11,
                           textAlign: 'center',
-                          width: '7%',
-                          minWidth: '60px'
+                          width: '10%'
                         }}
                       >
                         Status
@@ -1726,8 +1719,7 @@ const DashboardPage = () => {
                           top: 0,
                           zIndex: 11,
                           textAlign: 'center',
-                          width: '6%',
-                          minWidth: '50px'
+                          width: '7%'
                         }}
                       >
                         Actions
@@ -1758,32 +1750,32 @@ const DashboardPage = () => {
                           </TableCell>
                           <TableCell sx={{ verticalAlign: 'top' }}>
                             <Box>
-                              <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.25, fontSize: '0.875rem' }}>
+                              <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.2, fontSize: '0.85rem', lineHeight: 1.2 }}>
                                 {booking.customer ? booking.customer.name : (booking.walkInCustomerName || 'Walk-in Customer')}
                               </Typography>
-                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25, fontSize: '0.75rem' }}>
-                                {booking.customer ? 'Mobile Booking' : 'Walk-in'}
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.2, fontSize: '0.75rem' }}>
+                                {booking.customer ? 'Mobile' : 'Walk-in'}
                               </Typography>
                               {booking.phoneNumber && booking.phoneNumber !== 'Not provided' ? (
-                                <Typography variant="caption" color="primary.main" display="block" sx={{ fontWeight: 'bold' }}>
+                                <Typography variant="caption" color="primary.main" display="block" sx={{ fontWeight: 'bold', fontSize: '0.75rem' }}>
                                   📞 {booking.phoneNumber}
                                 </Typography>
                               ) : (
-                                <Typography variant="caption" color="text.secondary" display="block" sx={{ fontStyle: 'italic' }}>
-                                  📞 {booking.phoneNumber === 'Not provided' ? 'No phone number' : 'Phone number not available'}
+                                <Typography variant="caption" color="text.secondary" display="block" sx={{ fontStyle: 'italic', fontSize: '0.75rem' }}>
+                                  📞 No phone
                                 </Typography>
                               )}
                             </Box>
                           </TableCell>
                           <TableCell sx={{ verticalAlign: 'top' }}>
                             <Box>
-                              <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.25 }}>
+                              <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.2, fontSize: '0.8rem', lineHeight: 1.2 }}>
                                 {new Date(booking.bookingDate).toLocaleDateString('en-US', { 
                                   month: 'short', 
                                   day: 'numeric'
                                 })}
                               </Typography>
-                              <Typography variant="caption" color="primary.main" fontWeight="medium">
+                              <Typography variant="caption" color="primary.main" fontWeight="medium" sx={{ fontSize: '0.75rem' }}>
                                 {booking.startTime}
                               </Typography>
                             </Box>
@@ -1796,14 +1788,14 @@ const DashboardPage = () => {
                                 
                                 return (
                                   <>
-                                    <Typography variant="body2" fontWeight="bold" color={sessionInfo.color} sx={{ mb: 0.5 }}>
+                                    <Typography variant="body2" fontWeight="bold" color={sessionInfo.color} sx={{ mb: 0.2, fontSize: '0.8rem', lineHeight: 1.2 }}>
                                       {sessionInfo.date}
                                     </Typography>
-                                    <Typography variant="caption" color={sessionInfo.color} fontWeight="medium" sx={{ display: 'block', mb: 0.5 }}>
+                                    <Typography variant="caption" color={sessionInfo.color} fontWeight="medium" sx={{ display: 'block', mb: 0.2, fontSize: '0.75rem' }}>
                                       {sessionInfo.time}
                                     </Typography>
                                     {timeDiffInfo?.hasDifference && (
-                                      <Typography variant="caption" color="warning.main" display="block">
+                                      <Typography variant="caption" color="warning.main" display="block" sx={{ fontSize: '0.7rem' }}>
                                         {timeDiffInfo.message}
                                       </Typography>
                                     )}
@@ -1826,21 +1818,21 @@ const DashboardPage = () => {
                                     <Box>
                                       {/* Show room name only once if all systems are from same room */}
                                       {isSingleRoom && (
-                                        <Typography variant="body2" fontWeight="bold" color="success.main" sx={{ mb: 0.5 }}>
+                                        <Typography variant="body2" fontWeight="bold" color="success.main" sx={{ mb: 0.2, fontSize: '0.8rem', lineHeight: 1.2 }}>
                                           {uniqueRooms[0]}
                                         </Typography>
                                       )}
                                       
                                       {/* Show systems */}
                                       {booking.systemsBooked.map((system, index) => (
-                                        <Box key={index} sx={{ mb: index < booking.systemsBooked.length - 1 ? 0.5 : 0 }}>
+                                        <Box key={index} sx={{ mb: index < booking.systemsBooked.length - 1 ? 0.2 : 0 }}>
                                           {/* Show room name only if multiple different rooms */}
                                           {!isSingleRoom && (
-                                            <Typography variant="body2" fontWeight="bold" color="success.main" sx={{ mb: 0.25 }}>
+                                            <Typography variant="body2" fontWeight="bold" color="success.main" sx={{ mb: 0.1, fontSize: '0.8rem', lineHeight: 1.2 }}>
                                               {system.roomType}
                                             </Typography>
                                           )}
-                                          <Typography variant="caption" color="text.secondary">
+                                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                                             {system.systemType} × {system.numberOfSystems}
                                           </Typography>
                                         </Box>
@@ -1851,10 +1843,10 @@ const DashboardPage = () => {
                               ) : (
                                 // Old format fallback
                                 <Box>
-                                  <Typography variant="body2" fontWeight="bold" color="success.main" sx={{ mb: 0.25 }}>
+                                  <Typography variant="body2" fontWeight="bold" color="success.main" sx={{ mb: 0.1, fontSize: '0.8rem', lineHeight: 1.2 }}>
                                     {booking.roomType || 'N/A'}
                                   </Typography>
-                                  <Typography variant="caption" color="text.secondary">
+                                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                                     {booking.systemType} × {booking.numberOfSystems || 1}
                                   </Typography>
                                 </Box>
@@ -1865,8 +1857,8 @@ const DashboardPage = () => {
                             {/* Assigned Systems Column */}
                             {booking.assignedSystems && booking.assignedSystems.length > 0 ? (
                               <Box>
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 0.5 }}>
-                                  {booking.assignedSystems.map((system, index) => (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.3, mb: 0.2 }}>
+                                  {booking.assignedSystems.slice(0, 3).map((system, index) => (
                                     <Chip
                                       key={index}
                                       label={system.systemId}
@@ -1874,72 +1866,58 @@ const DashboardPage = () => {
                                       variant="outlined"
                                       color={booking.status === 'Active' ? 'success' : 'default'}
                                       sx={{ 
-                                        fontSize: '0.75rem',
+                                        fontSize: '0.7rem',
                                         fontFamily: 'monospace',
-                                        height: '24px'
+                                        height: '20px',
+                                        '& .MuiChip-label': {
+                                          padding: '0 6px'
+                                        }
                                       }}
                                     />
                                   ))}
+                                  {booking.assignedSystems.length > 3 && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', alignSelf: 'center' }}>
+                                      +{booking.assignedSystems.length - 3}
+                                    </Typography>
+                                  )}
                                 </Box>
-                                <Typography variant="caption" color="text.secondary">
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                                   {booking.assignedSystems.length} system(s)
                                 </Typography>
                               </Box>
                             ) : (
-                              <Typography variant="body2" color="text.secondary">
-                                {booking.status === 'Booked' ? 'Pending Assignment' : '-'}
+                              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                                {booking.status === 'Booked' ? 'Pending' : '-'}
                               </Typography>
                             )}
                           </TableCell>
-                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top', padding: '4px 2px' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
-                              <AccessTimeIcon sx={{ fontSize: '16px' }} color="primary" />
-                              <Chip
-                                label={formatDuration(booking.duration)}
-                                size="small"
-                                variant="outlined"
-                                color="primary"
-                                sx={{ 
-                                  fontWeight: 'bold',
-                                  fontSize: '0.75rem',
-                                  height: '22px',
-                                  '& .MuiChip-label': {
-                                    padding: '0 6px'
-                                  }
-                                }}
-                              />
+                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.2, flexDirection: 'column' }}>
+                              <AccessTimeIcon sx={{ fontSize: '12px' }} color="primary" />
+                              <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'primary.main' }}>
+                                {formatDuration(booking.duration)}
+                              </Typography>
                             </Box>
                           </TableCell>
                           
                           {/* Extended Time Column */}
-                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top', padding: '4px 2px' }}>
+                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top' }}>
                             {booking.extendedTime > 0 ? (
-                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
-                                <TrendingUpIcon sx={{ fontSize: '10px' }} color="warning" />
-                                <Chip
-                                  label={`+${formatDuration(booking.extendedTime)}`}
-                                  size="small"
-                                  variant="filled"
-                                  color="warning"
-                                  sx={{ 
-                                    fontWeight: 'bold',
-                                    fontSize: '0.6rem',
-                                    height: '18px',
-                                    '& .MuiChip-label': {
-                                      padding: '0 3px'
-                                    }
-                                  }}
-                                />
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.2, flexDirection: 'column' }}>
+                                <TrendingUpIcon sx={{ fontSize: '12px' }} color="warning" />
+                                <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'warning.main' }}>
+                                  +{formatDuration(booking.extendedTime)}
+                                </Typography>
                               </Box>
                             ) : (
-                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                                 -
                               </Typography>
                             )}
                           </TableCell>
                           
                           {/* Extension Fee Column */}
-                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top', padding: '4px 2px' }}>
+                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top' }}>
                             {booking.extendedTime > 0 ? (
                               <Box>
                                 <Typography 
@@ -1949,32 +1927,29 @@ const DashboardPage = () => {
                                   sx={{ 
                                     fontFamily: 'monospace', 
                                     mb: 0.1,
-                                    fontSize: '0.65rem'
+                                    fontSize: '0.7rem',
+                                    lineHeight: 1.2
                                   }}
                                 >
                                   ₹{booking.extensionPaymentAmount?.toLocaleString() || '0'}
                                 </Typography>
-                                <Chip
-                                  label={booking.extensionPaymentStatus === 'completed' ? 'Paid' : 
-                                         booking.extensionPaymentStatus === 'pending' ? 'Pending' : 
-                                         booking.extensionPaymentStatus === 'failed' ? 'Failed' : 'Not Set'}
-                                  size="small"
-                                  variant="filled"
-                                  color={booking.extensionPaymentStatus === 'completed' ? 'success' : 
-                                         booking.extensionPaymentStatus === 'pending' ? 'warning' : 
-                                         booking.extensionPaymentStatus === 'failed' ? 'error' : 'default'}
+                                <Typography 
+                                  variant="caption"
                                   sx={{ 
-                                    fontWeight: 'bold', 
-                                    fontSize: '0.6rem',
-                                    height: '16px',
-                                    '& .MuiChip-label': {
-                                      padding: '0 3px'
-                                    }
+                                    fontSize: '0.65rem',
+                                    fontWeight: 'bold',
+                                    color: booking.extensionPaymentStatus === 'completed' ? 'success.main' : 
+                                           booking.extensionPaymentStatus === 'pending' ? 'warning.main' : 
+                                           booking.extensionPaymentStatus === 'failed' ? 'error.main' : 'text.secondary'
                                   }}
-                                />
+                                >
+                                  {booking.extensionPaymentStatus === 'completed' ? 'Paid' : 
+                                   booking.extensionPaymentStatus === 'pending' ? 'Pending' : 
+                                   booking.extensionPaymentStatus === 'failed' ? 'Failed' : 'Not Set'}
+                                </Typography>
                               </Box>
                             ) : (
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                                 -
                               </Typography>
                             )}
@@ -1985,12 +1960,12 @@ const DashboardPage = () => {
                               variant="h6" 
                               fontWeight="bold" 
                               color="success.main"
-                              sx={{ fontFamily: 'monospace' }}
+                              sx={{ fontFamily: 'monospace', fontSize: '1.1rem', lineHeight: 1.5 }}
                             >
                               ₹{booking.totalPrice?.toLocaleString() || '0'}
                             </Typography>
                           </TableCell>
-                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top', padding: '4px 2px' }}>
+                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top' }}>
                             <Chip 
                               label={booking.permanentlyCancelled ? 'Cancelled' : booking.status}
                               icon={
@@ -2009,19 +1984,20 @@ const DashboardPage = () => {
                                 booking.status === 'Completed' ? 'success' : 
                                 booking.status === 'Cancelled' ? 'error' : 'default'
                               }
-                              size="small"
+                              size="medium"
                               sx={{ 
                                 fontWeight: 'bold',
-                                fontSize: '0.65rem',
-                                height: '20px',
+                                fontSize: '0.75rem',
+                                height: '24px',
+                                minWidth: '80px',
                                 '& .MuiChip-label': {
-                                  padding: '0 4px'
+                                  padding: '0 6px'
                                 }
                               }}
                             />
                           </TableCell>
-                          <TableCell align="center" sx={{ verticalAlign: 'top', padding: '4px 2px' }}>
-                            <Stack direction="column" spacing={0.25} alignItems="center" sx={{ minHeight: '35px', justifyContent: 'flex-start', pt: 0.5 }}>
+                          <TableCell align="center" sx={{ verticalAlign: 'top' }}>
+                            <Stack direction="column" spacing={0.2} alignItems="center" sx={{ minHeight: '30px', justifyContent: 'flex-start', pt: 0.3 }}>
                               {booking.status === 'Booked' && (
                                 <>
                                   <Button 
@@ -2030,12 +2006,12 @@ const DashboardPage = () => {
                                     color="primary"
                                     onClick={() => handleStartSession(booking)}
                                     sx={{ 
-                                      mb: 0.25, 
+                                      mb: 0.2, 
                                       fontSize: '0.7rem', 
                                       py: 0.2, 
                                       px: 0.5, 
-                                      minWidth: '50px',
-                                      height: '24px'
+                                      minWidth: '45px',
+                                      height: '22px'
                                     }}
                                   >
                                     Start
@@ -2062,11 +2038,11 @@ const DashboardPage = () => {
                                           color="error" 
                                           onClick={() => handleCancelBooking(booking._id, booking.customer?.name || booking.walkInCustomerName || 'Walk-in Customer')}
                                           sx={{ 
-                                            fontSize: '0.7rem', 
-                                            py: 0.2, 
-                                            px: 0.5, 
-                                            minWidth: '50px',
-                                            height: '24px'
+                                            fontSize: '0.6rem', 
+                                            py: 0.1, 
+                                            px: 0.4, 
+                                            minWidth: '40px',
+                                            height: '20px'
                                           }}
                                         >
                                           Cancel
@@ -2075,8 +2051,8 @@ const DashboardPage = () => {
                                     </Tooltip>
                                   )}
                                   {!canCancel && isSessionStarted && (
-                                    <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                      Cancel unavailable (15+ min)
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', fontSize: '0.55rem' }}>
+                                      Cancel unavailable
                                     </Typography>
                                   )}
                                 </>
@@ -2090,12 +2066,12 @@ const DashboardPage = () => {
                                     color="info" 
                                     onClick={() => handleExtendBooking(booking)}
                                     sx={{ 
-                                      mb: 0.25, 
-                                      fontSize: '0.7rem', 
-                                      py: 0.2, 
-                                      px: 0.5, 
-                                      minWidth: '50px',
-                                      height: '24px'
+                                      mb: 0.2, 
+                                      fontSize: '0.6rem', 
+                                      py: 0.1, 
+                                      px: 0.4, 
+                                      minWidth: '40px',
+                                      height: '20px'
                                     }}
                                   >
                                     Extend
@@ -2122,11 +2098,11 @@ const DashboardPage = () => {
                                           color="error" 
                                           onClick={() => handleCancelBooking(booking._id, booking.customer?.name || booking.walkInCustomerName || 'Walk-in Customer')}
                                           sx={{ 
-                                            fontSize: '0.7rem', 
-                                            py: 0.2, 
-                                            px: 0.5, 
-                                            minWidth: '50px',
-                                            height: '24px'
+                                            fontSize: '0.6rem', 
+                                            py: 0.1, 
+                                            px: 0.4, 
+                                            minWidth: '40px',
+                                            height: '20px'
                                           }}
                                         >
                                           Cancel
@@ -2135,8 +2111,8 @@ const DashboardPage = () => {
                                     </Tooltip>
                                   )}
                                   {!canCancel && isSessionStarted && (
-                                    <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                      Cancel unavailable (15+ min)
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', fontSize: '0.55rem' }}>
+                                      Cancel unavailable
                                     </Typography>
                                   )}
                                 </>
@@ -2150,12 +2126,12 @@ const DashboardPage = () => {
                                     color="info" 
                                     onClick={() => handleExtendBooking(booking)}
                                     sx={{ 
-                                      mb: 0.25, 
-                                      fontSize: '0.7rem', 
-                                      py: 0.2, 
-                                      px: 0.5, 
-                                      minWidth: '50px',
-                                      height: '24px'
+                                      mb: 0.2, 
+                                      fontSize: '0.6rem', 
+                                      py: 0.1, 
+                                      px: 0.4, 
+                                      minWidth: '40px',
+                                      height: '20px'
                                     }}
                                   >
                                     Extend
@@ -2182,11 +2158,11 @@ const DashboardPage = () => {
                                           color="error" 
                                           onClick={() => handleCancelBooking(booking._id, booking.customer?.name || booking.walkInCustomerName || 'Walk-in Customer')}
                                           sx={{ 
-                                            fontSize: '0.7rem', 
-                                            py: 0.2, 
-                                            px: 0.5, 
-                                            minWidth: '50px',
-                                            height: '24px'
+                                            fontSize: '0.6rem', 
+                                            py: 0.1, 
+                                            px: 0.4, 
+                                            minWidth: '40px',
+                                            height: '20px'
                                           }}
                                         >
                                           Cancel
@@ -2195,22 +2171,22 @@ const DashboardPage = () => {
                                     </Tooltip>
                                   )}
                                   {!canCancel && isSessionStarted && (
-                                    <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                      Cancel unavailable (15+ min)
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', fontSize: '0.55rem' }}>
+                                      Cancel unavailable
                                     </Typography>
                                   )}
                                 </>
                               )}
                               
                               {booking.status === 'Cancelled' && (
-                                 <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', textAlign: 'center' }}>
+                                 <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', textAlign: 'center', fontSize: '0.65rem' }}>
                                    Cancelled
                                  </Typography>
                                )}
                               
                               {booking.permanentlyCancelled && (
-                                <Typography variant="caption" color="error" sx={{ fontStyle: 'italic' }}>
-                                  No actions available
+                                <Typography variant="caption" color="error" sx={{ fontStyle: 'italic', fontSize: '0.65rem' }}>
+                                  No actions
                                 </Typography>
                               )}
                             </Stack>
@@ -2220,7 +2196,7 @@ const DashboardPage = () => {
                     })}
                     {displayedBookings.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={9} sx={{ textAlign: 'center', py: 6 }}>
+                        <TableCell colSpan={12} sx={{ textAlign: 'center', py: 6 }}>
                           <BookingsIcon sx={{ fontSize: 48, color: 'grey.400', mb: 2 }} />
                           <Typography variant="h6" color="text.secondary" gutterBottom>
                             {filterDate ? 'No bookings found for selected date' : 'No bookings yet'}
