@@ -130,7 +130,7 @@ const ExtendSessionModal = ({ open, onClose, booking, onExtend }) => {
             Booking Details
           </Typography>
           <Typography variant="body2">
-            <strong>Customer:</strong> {booking.walkInCustomerName || 'Walk-in Customer'}
+            <strong>Customer:</strong> {booking.walkInCustomerName || booking.customer?.name || 'Walk-in Customer'}
           </Typography>
           <Typography variant="body2">
             <strong>Current Duration:</strong> {formatDuration(booking.duration)}
