@@ -662,209 +662,656 @@ const DashboardPage = () => {
   }
 
   return (
-    <Box sx={{ flexGrow: 1, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-      {/* Simple Header */}
-      <AppBar position="static" sx={{ backgroundColor: '#1976d2' }}>
-        <Toolbar>
-          <DashboardIcon sx={{ mr: 2 }} />
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
-            {myCafe?.name || 'Cafe Dashboard'}
-          </Typography>
-          <IconButton color="inherit" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshIcon />
-          </IconButton>
-          <Button color="inherit" onClick={handleRefreshStatus} disabled={refreshing}>
-            <RefreshIcon /> Refresh Status
-          </Button>
-          <Button color="inherit" onClick={() => setTipsModalOpen(true)}>
-            💡 Tips & Help
-          </Button>
-          <Button color="inherit" onClick={handleLogout}>Logout</Button>
+    <Box sx={{ 
+      flexGrow: 1, 
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+      position: 'relative'
+    }}>
+
+      {/* Clean Light Header */}
+      <AppBar 
+        position="static" 
+        sx={{ 
+          background: '#ffffff',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+          borderBottom: '1px solid #e2e8f0',
+          color: '#1e293b',
+          position: 'relative'
+        }}
+      >
+        <Toolbar sx={{ py: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 48,
+                height: 48,
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)'
+              }}
+            >
+              <DashboardIcon sx={{ fontSize: 24, color: '#ffffff' }} />
+            </Box>
+            <Box>
+              <Typography 
+                variant="h5" 
+                component="div" 
+                sx={{ 
+                  fontWeight: 700, 
+                  lineHeight: 1.2,
+                  color: '#1e293b',
+                  fontSize: { xs: '1.3rem', md: '1.5rem' }
+                }}
+              >
+                {myCafe?.name || 'Cafe Dashboard'}
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#64748b', 
+                  fontSize: '0.875rem',
+                  fontWeight: 500
+                }}
+              >
+                Welcome back, {user ? user.name : 'Owner'}!
+              </Typography>
+            </Box>
+          </Box>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button 
+              color="inherit" 
+              onClick={handleRefreshStatus} 
+              disabled={refreshing}
+              startIcon={<RefreshIcon />}
+              sx={{
+                backgroundColor: '#f1f5f9',
+                border: '1px solid #e2e8f0',
+                borderRadius: 1,
+                px: 2,
+                py: 1,
+                textTransform: 'none',
+                fontWeight: 600,
+                color: '#64748b',
+                '&:hover': {
+                  backgroundColor: '#e2e8f0',
+                  transform: 'translateY(-1px)',
+                },
+                '&:disabled': {
+                  opacity: 0.5
+                }
+              }}
+            >
+              Refresh Status
+            </Button>
+            <Button 
+              color="inherit" 
+              onClick={() => setTipsModalOpen(true)}
+              sx={{
+                backgroundColor: '#f1f5f9',
+                border: '1px solid #e2e8f0',
+                borderRadius: 1,
+                px: 2,
+                py: 1,
+                textTransform: 'none',
+                fontWeight: 600,
+                color: '#64748b',
+                '&:hover': {
+                  backgroundColor: '#e2e8f0',
+                  transform: 'translateY(-1px)',
+                }
+              }}
+            >
+              💡 Tips & Help
+            </Button>
+            <Button 
+              color="inherit" 
+              onClick={handleLogout}
+              sx={{
+                backgroundColor: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: 1,
+                px: 2,
+                py: 1,
+                textTransform: 'none',
+                fontWeight: 600,
+                color: '#dc2626',
+                '&:hover': {
+                  backgroundColor: '#fee2e2',
+                  transform: 'translateY(-1px)',
+                }
+              }}
+            >
+              Logout
+            </Button>
+          </Box>
         </Toolbar>
       </AppBar>
       
-      <Container maxWidth="lg" sx={{ mt: 2, mb: 3 }}>
-        <Typography variant="h5" sx={{ mb: 1, fontWeight: 'bold' }}>
-          Welcome, {user ? user.name : 'Owner'}!
-        </Typography>
-        
-        {error && <Alert severity="error" sx={{ mb: 1.5, py: 0.5 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 1.5, py: 0.5 }}>{success}</Alert>}
+      <Container maxWidth="lg" sx={{ py: 3 }}>
+        {/* Alerts Section */}
+        {error && (
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 1.5, 
+              borderRadius: 1,
+              py: 1,
+              '& .MuiAlert-message': {
+                fontSize: '0.8rem'
+              }
+            }}
+          >
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert 
+            severity="success" 
+            sx={{ 
+              mb: 1.5, 
+              borderRadius: 1,
+              py: 1,
+              '& .MuiAlert-message': {
+                fontSize: '0.8rem'
+              }
+            }}
+          >
+            {success}
+          </Alert>
+        )}
         
         {/* Status Refresh Info */}
         {lastStatusRefresh && (
-          <Alert severity="info" sx={{ mb: 1.5, py: 0.5 }}>
+          <Alert 
+            severity="info" 
+            sx={{ 
+              mb: 1.5, 
+              borderRadius: 1,
+              py: 1,
+              '& .MuiAlert-message': {
+                fontSize: '0.8rem'
+              }
+            }}
+          >
             Last status refresh: {lastStatusRefresh.toLocaleString()}
           </Alert>
         )}
         
-        {/* Simple Navigation Buttons */}
-        <Stack direction="row" spacing={1.5} sx={{ mb: 1.5 }} flexWrap="wrap">
-          <Button 
-            variant={currentView === 'dashboard' ? 'contained' : 'outlined'}
-            onClick={() => setCurrentView('dashboard')}
-            startIcon={<DashboardIcon />}
-            size="medium"
-            sx={{ py: 0.5, px: 1.5 }}
-          >
-            Overview
-          </Button>
-          <Button 
-            variant={currentView === 'bookings' ? 'contained' : 'outlined'}
-            onClick={() => setCurrentView('bookings')}
-            startIcon={<BookingsIcon />}
-            size="medium"
-            sx={{ py: 0.5, px: 1.5 }}
-          >
-            Bookings
-          </Button>
-          <Button 
-            variant="outlined"
-            onClick={handleOpenSystemManagement}
-            startIcon={<ComputerIcon />}
-            size="medium"
-            color="secondary"
-            sx={{ py: 0.5, px: 1.5 }}
-          >
-            System Management
-          </Button>
-          <Button 
-            variant={currentView === 'reviews' ? 'contained' : 'outlined'}
-            onClick={() => setCurrentView('reviews')}
-            startIcon={<ReviewsIcon />}
-            size="medium"
-            sx={{ py: 0.5, px: 1.5 }}
-          >
-            Reviews
-          </Button>
-          <Button 
-            variant={currentView === 'cafe' ? 'contained' : 'outlined'}
-            onClick={() => setCurrentView('cafe')}
-            startIcon={<BusinessIcon />}
-            size="medium"
-            sx={{ py: 0.5, px: 1.5 }}
-          >
-            Cafe Settings
-          </Button>
-        </Stack>
+        {/* Professional Navigation Cards */}
+        <Paper
+          elevation={8}
+          sx={{
+            borderRadius: 3,
+            overflow: 'hidden',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            mb: 4
+          }}
+        >
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
+              Quick Navigation
+            </Typography>
+            <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 2 }}>
+              <Button 
+                variant={currentView === 'dashboard' ? 'contained' : 'outlined'}
+                onClick={() => setCurrentView('dashboard')}
+                startIcon={<DashboardIcon />}
+                size="large"
+                sx={{ 
+                  py: 1.5, 
+                  px: 3,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  minWidth: 140,
+                  background: currentView === 'dashboard' ? 
+                    'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)' : 'transparent',
+                  '&:hover': {
+                    background: currentView === 'dashboard' ? 
+                      'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)' : 
+                      'rgba(25, 118, 210, 0.04)',
+                    transform: 'translateY(-1px)',
+                  }
+                }}
+              >
+                Overview
+              </Button>
+              <Button 
+                variant={currentView === 'bookings' ? 'contained' : 'outlined'}
+                onClick={() => setCurrentView('bookings')}
+                startIcon={<BookingsIcon />}
+                size="large"
+                sx={{ 
+                  py: 1.5, 
+                  px: 3,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  minWidth: 140,
+                  background: currentView === 'bookings' ? 
+                    'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)' : 'transparent',
+                  '&:hover': {
+                    background: currentView === 'bookings' ? 
+                      'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)' : 
+                      'rgba(25, 118, 210, 0.04)',
+                    transform: 'translateY(-1px)',
+                  }
+                }}
+              >
+                Bookings
+              </Button>
+              <Button 
+                variant="outlined"
+                onClick={handleOpenSystemManagement}
+                startIcon={<ComputerIcon />}
+                size="large"
+                sx={{ 
+                  py: 1.5, 
+                  px: 3,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  minWidth: 180,
+                  borderColor: '#9c27b0',
+                  color: '#9c27b0',
+                  '&:hover': {
+                    backgroundColor: 'rgba(156, 39, 176, 0.04)',
+                    borderColor: '#7b1fa2',
+                    color: '#7b1fa2',
+                    transform: 'translateY(-1px)',
+                  }
+                }}
+              >
+                System Management
+              </Button>
+              <Button 
+                variant={currentView === 'reviews' ? 'contained' : 'outlined'}
+                onClick={() => setCurrentView('reviews')}
+                startIcon={<ReviewsIcon />}
+                size="large"
+                sx={{ 
+                  py: 1.5, 
+                  px: 3,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  minWidth: 140,
+                  background: currentView === 'reviews' ? 
+                    'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)' : 'transparent',
+                  '&:hover': {
+                    background: currentView === 'reviews' ? 
+                      'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)' : 
+                      'rgba(25, 118, 210, 0.04)',
+                    transform: 'translateY(-1px)',
+                  }
+                }}
+              >
+                Reviews
+              </Button>
+              <Button 
+                variant={currentView === 'cafe' ? 'contained' : 'outlined'}
+                onClick={() => setCurrentView('cafe')}
+                startIcon={<BusinessIcon />}
+                size="large"
+                sx={{ 
+                  py: 1.5, 
+                  px: 3,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  minWidth: 140,
+                  background: currentView === 'cafe' ? 
+                    'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)' : 'transparent',
+                  '&:hover': {
+                    background: currentView === 'cafe' ? 
+                      'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)' : 
+                      'rgba(25, 118, 210, 0.04)',
+                    transform: 'translateY(-1px)',
+                  }
+                }}
+              >
+                Cafe Settings
+              </Button>
+            </Stack>
+          </Box>
+        </Paper>
 
-        {/* Quick Stats */}
-        <Grid container spacing={2} sx={{ mb: 1.5 }}>
+        {/* Professional Stats Cards */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
           {/* First Row - 2 cards */}
           <Grid item xs={12} sm={6} md={6}>
-            <Card sx={{ bgcolor: '#e3f2fd', borderLeft: '4px solid #1976d2' }}>
-              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+            <Paper
+              elevation={8}
+              sx={{
+                borderRadius: 3,
+                overflow: 'hidden',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '4px',
+                  background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)'
+                }
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1976d2', mb: 0.5 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#1976d2', mb: 1 }}>
                       {stats.todayBookings}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">Today's Bookings</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                      Today's Bookings
+                    </Typography>
                   </Box>
-                  <AccessTimeIcon sx={{ fontSize: 32, color: '#1976d2', opacity: 0.7 }} />
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 60,
+                      height: 60,
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                  >
+                    <AccessTimeIcon sx={{ fontSize: 28, color: '#1976d2' }} />
+                  </Box>
                 </Box>
               </CardContent>
-            </Card>
+            </Paper>
           </Grid>
           <Grid item xs={12} sm={6} md={6}>
-            <Card sx={{ bgcolor: '#f3e5f5', borderLeft: '4px solid #9c27b0' }}>
-              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+            <Paper
+              elevation={8}
+              sx={{
+                borderRadius: 3,
+                overflow: 'hidden',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '4px',
+                  background: 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)'
+                }
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#9c27b0', mb: 0.5 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#9c27b0', mb: 1 }}>
                       {stats.confirmedBookings}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">Active Bookings</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                      Active Bookings
+                    </Typography>
                   </Box>
-                  <BookingsIcon sx={{ fontSize: 32, color: '#9c27b0', opacity: 0.7 }} />
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 60,
+                      height: 60,
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(156, 39, 176, 0.1)',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                  >
+                    <BookingsIcon sx={{ fontSize: 28, color: '#9c27b0' }} />
+                  </Box>
                 </Box>
               </CardContent>
-            </Card>
+            </Paper>
           </Grid>
           
           {/* Second Row - 3 cards */}
           <Grid item xs={12} sm={4} md={4}>
-            <Card sx={{ bgcolor: '#e8f5e8', borderLeft: '4px solid #388e3c' }}>
-              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+            <Paper
+              elevation={8}
+              sx={{
+                borderRadius: 3,
+                overflow: 'hidden',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '4px',
+                  background: 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)'
+                }
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#388e3c', mb: 0.5 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 700, color: '#2e7d32', mb: 1 }}>
                       ₹{stats.totalRevenue.toLocaleString()}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">Total Revenue (Completed)</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                      Total Revenue
+                    </Typography>
                   </Box>
-                  <TrendingUpIcon sx={{ fontSize: 32, color: '#388e3c', opacity: 0.7 }} />
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 50,
+                      height: 50,
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                  >
+                    <TrendingUpIcon sx={{ fontSize: 24, color: '#2e7d32' }} />
+                  </Box>
                 </Box>
               </CardContent>
-            </Card>
+            </Paper>
           </Grid>
           <Grid item xs={12} sm={4} md={4}>
-            <Card sx={{ bgcolor: '#e0f2f1', borderLeft: '4px solid #00796b' }}>
-              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+            <Paper
+              elevation={8}
+              sx={{
+                borderRadius: 3,
+                overflow: 'hidden',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '4px',
+                  background: 'linear-gradient(135deg, #00796b 0%, #004d40 100%)'
+                }
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#00796b', mb: 0.5 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 700, color: '#00796b', mb: 1 }}>
                       ₹{stats.dailyRevenue.toLocaleString()}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">Today's Revenue</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                      Today's Revenue
+                    </Typography>
                   </Box>
-                  <TrendingUpIcon sx={{ fontSize: 32, color: '#00796b', opacity: 0.7 }} />
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 50,
+                      height: 50,
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(0, 121, 107, 0.1)',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                  >
+                    <TrendingUpIcon sx={{ fontSize: 24, color: '#00796b' }} />
+                  </Box>
                 </Box>
               </CardContent>
-            </Card>
+            </Paper>
           </Grid>
           <Grid item xs={12} sm={4} md={4}>
-            <Card sx={{ bgcolor: '#fff3e0', borderLeft: '4px solid #f57c00' }}>
-              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+            <Paper
+              elevation={8}
+              sx={{
+                borderRadius: 3,
+                overflow: 'hidden',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '4px',
+                  background: 'linear-gradient(135deg, #f57c00 0%, #e65100 100%)'
+                }
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#f57c00', mb: 0.5 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 700, color: '#f57c00', mb: 1 }}>
                       {stats.averageRating}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
                       Avg Rating ({stats.totalReviews})
                     </Typography>
                   </Box>
-                  <ReviewsIcon sx={{ fontSize: 32, color: '#f57c00', opacity: 0.7 }} />
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 50,
+                      height: 50,
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(245, 124, 0, 0.1)',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                  >
+                    <ReviewsIcon sx={{ fontSize: 24, color: '#f57c00' }} />
+                  </Box>
                 </Box>
               </CardContent>
-            </Card>
+            </Paper>
           </Grid>
         </Grid>
 
         {/* Dashboard Overview */}
         {currentView === 'dashboard' && (
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', md: 'row' }, 
+            gap: 3,
+            minHeight: '65vh'
+          }}>
             {/* Quick Info Card - Left Side */}
             <Box sx={{ flex: { xs: '1 1 100%', md: '0 0 66.666667%' } }}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent sx={{ p: 2.5 }}>
-                  <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold', mb: 2 }}>
-                    <BusinessIcon sx={{ mr: 1, verticalAlign: 'middle', fontSize: 20 }} />
-                    Quick Info
-                  </Typography>
-                  <Typography variant="h6" sx={{ mb: 1.5, fontSize: '1.1rem', fontWeight: '600' }}>{myCafe?.name || 'Loading...'}</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, lineHeight: 1.5 }}>
-                    <strong>Address:</strong> {myCafe?.address || 'Loading...'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, lineHeight: 1.5 }}>
-                    <strong>Contact:</strong> {myCafe?.contactNumber || 'Not provided'}
-                  </Typography>
-                  {myCafe?.description && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontStyle: 'italic', lineHeight: 1.5 }}>
-                      <strong>Description:</strong> {myCafe.description}
+              <Paper
+                elevation={2}
+                sx={{
+                  background: '#ffffff',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                  height: '100%'
+                }}
+              >
+                <CardContent sx={{ p: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 48,
+                        height: 48,
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                        backdropFilter: 'blur(10px)',
+                        mr: 2
+                      }}
+                    >
+                      <BusinessIcon sx={{ fontSize: 24, color: '#1976d2' }} />
+                    </Box>
+                    <Typography variant="h5" sx={{ color: '#1976d2', fontWeight: 700 }}>
+                      Cafe Information
                     </Typography>
-                  )}
+                  </Box>
+                  
+                  <Typography variant="h4" sx={{ mb: 2, fontSize: '1.5rem', fontWeight: 700, color: 'text.primary' }}>
+                    {myCafe?.name || 'Loading...'}
+                  </Typography>
+                  
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="body1" color="text.secondary" sx={{ mb: 1.5, lineHeight: 1.6 }}>
+                      <strong>📍 Address:</strong> {myCafe?.address || 'Loading...'}
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary" sx={{ mb: 1.5, lineHeight: 1.6 }}>
+                      <strong>📞 Contact:</strong> {myCafe?.contactNumber || 'Not provided'}
+                    </Typography>
+                    {myCafe?.description && (
+                      <Typography variant="body1" color="text.secondary" sx={{ mb: 1.5, fontStyle: 'italic', lineHeight: 1.6 }}>
+                        <strong>📝 Description:</strong> {myCafe.description}
+                      </Typography>
+                    )}
+                  </Box>
                   
                   {/* Cafe Open/Close Toggle */}
-                  <Box 
+                  <Paper
+                    elevation={2}
                     sx={{ 
-                      mt: 2, 
-                      mb: 2, 
-                      p: 1.5, 
-                      bgcolor: myCafe?.isOpen ? '#e8f5e8' : '#ffebee', 
-                      borderRadius: 1,
-                      border: `1px solid ${myCafe?.isOpen ? '#4caf50' : '#f44336'}`
+                      mt: 3, 
+                      mb: 3, 
+                      p: 3, 
+                      bgcolor: myCafe?.isOpen ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)', 
+                      borderRadius: 2,
+                      border: `2px solid ${myCafe?.isOpen ? '#4caf50' : '#f44336'}`,
+                      backdropFilter: 'blur(10px)'
                     }}
                   >
                     <FormControlLabel
@@ -879,9 +1326,9 @@ const DashboardPage = () => {
                       }
                       label={
                         <Typography 
-                          variant="body1" 
+                          variant="h6" 
                           sx={{ 
-                            fontWeight: 'bold',
+                            fontWeight: 700,
                             color: myCafe?.isOpen ? '#2e7d32' : '#d32f2f'
                           }}
                         >
@@ -889,39 +1336,77 @@ const DashboardPage = () => {
                         </Typography>
                       }
                     />
-                  </Box>
+                  </Paper>
                   
-                  <Box sx={{ mt: 2 }}>
+                  <Box sx={{ mt: 3 }}>
                     <Button 
                       variant="contained" 
                       component={Link} 
                       to={`/edit-cafe/${myCafe?._id}`}
                       startIcon={<EditIcon />}
-                      size="small"
+                      size="large"
                       disabled={!myCafe}
+                      sx={{
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        px: 4,
+                        py: 1.5,
+                        background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                        boxShadow: '0 4px 14px 0 rgba(25, 118, 210, 0.39)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+                          boxShadow: '0 6px 20px 0 rgba(25, 118, 210, 0.5)',
+                          transform: 'translateY(-1px)',
+                        }
+                      }}
                     >
                       Edit Details
                     </Button>
                   </Box>
                 </CardContent>
-              </Card>
+              </Paper>
             </Box>
             
             {/* Quick Actions Card - Right Side */}
             <Box sx={{ flex: { xs: '1 1 100%', md: '0 0 33.333333%' } }}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent sx={{ p: 2.5 }}>
-                  <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold', mb: 2 }}>
+              <Paper
+                elevation={8}
+                sx={{
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                  height: '100%'
+                }}
+              >
+                <CardContent sx={{ p: 4 }}>
+                  <Typography variant="h5" sx={{ color: '#1976d2', fontWeight: 700, mb: 3 }}>
                     Quick Actions
                   </Typography>
-                  <Stack spacing={2}>
+                  <Stack spacing={2.5}>
                     <Button 
                       variant="contained" 
                       color="primary" 
                       onClick={() => setCurrentView('bookings')}
                       startIcon={<BookingsIcon />}
                       fullWidth
-                      size="medium"
+                      size="large"
+                      sx={{
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        py: 1.5,
+                        background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                        boxShadow: '0 4px 14px 0 rgba(25, 118, 210, 0.39)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+                          boxShadow: '0 6px 20px 0 rgba(25, 118, 210, 0.5)',
+                          transform: 'translateY(-1px)',
+                        }
+                      }}
                     >
                       Manage Bookings
                     </Button>
@@ -931,7 +1416,20 @@ const DashboardPage = () => {
                       onClick={handleOpenWalkInModal}
                       startIcon={<AddIcon />}
                       fullWidth
-                      size="medium"
+                      size="large"
+                      sx={{
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        py: 1.5,
+                        background: 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)',
+                        boxShadow: '0 4px 14px 0 rgba(156, 39, 176, 0.39)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #7b1fa2 0%, #6a1b9a 100%)',
+                          boxShadow: '0 6px 20px 0 rgba(156, 39, 176, 0.5)',
+                          transform: 'translateY(-1px)',
+                        }
+                      }}
                     >
                       Add Walk-in Booking
                     </Button>
@@ -940,13 +1438,27 @@ const DashboardPage = () => {
                       onClick={() => setCurrentView('reviews')}
                       startIcon={<ReviewsIcon />}
                       fullWidth
-                      size="medium"
+                      size="large"
+                      sx={{
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        py: 1.5,
+                        borderColor: '#1976d2',
+                        color: '#1976d2',
+                        '&:hover': {
+                          backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                          borderColor: '#1565c0',
+                          color: '#1565c0',
+                          transform: 'translateY(-1px)',
+                        }
+                      }}
                     >
                       View Customer Reviews
                     </Button>
                   </Stack>
                 </CardContent>
-              </Card>
+              </Paper>
             </Box>
           </Box>
         )}
@@ -1005,16 +1517,36 @@ const DashboardPage = () => {
                 sx={{ 
                   maxHeight: 500, 
                   overflow: 'auto',
-                  border: '1px solid #e0e0e0',
+                  border: '2px solid #e0e0e0',
                   borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                   '& .MuiTableHead-root': {
                     position: 'sticky',
                     top: 0,
                     zIndex: 10
+                  },
+                  '& .MuiTable-root': {
+                    borderCollapse: 'separate',
+                    borderSpacing: 0
+                  },
+                  '& .MuiTableCell-root': {
+                    borderRight: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0',
+                    '&:last-child': {
+                      borderRight: 'none'
+                    }
+                  },
+                  '& .MuiTableHead-root .MuiTableCell-root': {
+                    borderBottom: '2px solid #1976d2',
+                    fontWeight: 'bold'
                   }
                 }}
               >
-                <Table stickyHeader size="small" sx={{ tableLayout: 'auto' }}>
+                <Table stickyHeader size="small" sx={{ 
+                  tableLayout: 'fixed',
+                  width: '100%',
+                  minWidth: '1200px'
+                }}>
                   <TableHead>
                     <TableRow>
                       <TableCell 
@@ -1022,11 +1554,11 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '3%',
                           textAlign: 'center',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
+                          width: '3%',
                           minWidth: '40px'
                         }}
                       >
@@ -1037,11 +1569,11 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '14%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          minWidth: '120px'
+                          width: '9%',
+                          minWidth: '85px'
                         }}
                       >
                         Customer
@@ -1051,16 +1583,16 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '9%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          minWidth: '90px'
+                          width: '7%',
+                          minWidth: '50px'
                         }}
-                        title="When the booking was made (scheduled time for mobile, booking time for walk-in)"
+                        title="When the booking was made"
                       >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <AccessTimeIcon sx={{ fontSize: 16 }} />
+                          <AccessTimeIcon sx={{ fontSize: 14 }} />
                           Date & Time
                         </Box>
                       </TableCell>
@@ -1069,16 +1601,16 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '9%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          minWidth: '90px'
+                          width: '8%',
+                          minWidth: '70px'
                         }}
-                        title="When the actual gaming session started (may differ from booking time)"
+                        title="When the actual gaming session started"
                       >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <TimerIcon sx={{ fontSize: 16 }} />
+                          <TimerIcon sx={{ fontSize: 14 }} />
                           Session Start
                         </Box>
                       </TableCell>
@@ -1087,11 +1619,11 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '10%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          minWidth: '90px'
+                          width: '9%',
+                          minWidth: '85px'
                         }}
                       >
                         Room/System
@@ -1101,11 +1633,11 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '10%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          minWidth: '90px'
+                          width: '8%',
+                          minWidth: '60px'
                         }}
                       >
                         Systems
@@ -1115,12 +1647,12 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '7%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          minWidth: '70px',
-                          textAlign: 'center'
+                          textAlign: 'center',
+                          width: '7%',
+                          minWidth: '60px'
                         }}
                       >
                         Duration
@@ -1130,12 +1662,12 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '7%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          minWidth: '70px',
-                          textAlign: 'center'
+                          textAlign: 'center',
+                          width: '7%',
+                          minWidth: '60px'
                         }}
                       >
                         Extended
@@ -1145,12 +1677,12 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '9%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          minWidth: '90px',
-                          textAlign: 'center'
+                          textAlign: 'center',
+                          width: '6%',
+                          minWidth: '55px'
                         }}
                       >
                         Extension Fee
@@ -1160,12 +1692,12 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '8%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          minWidth: '80px',
-                          textAlign: 'right'
+                          textAlign: 'right',
+                          width: '6%',
+                          minWidth: '50px'
                         }}
                       >
                         Price
@@ -1175,12 +1707,12 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          width: '9%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          minWidth: '90px',
-                          textAlign: 'center'
+                          textAlign: 'center',
+                          width: '7%',
+                          minWidth: '60px'
                         }}
                       >
                         Status
@@ -1190,12 +1722,12 @@ const DashboardPage = () => {
                           fontWeight: 'bold', 
                           bgcolor: 'primary.main', 
                           color: 'white',
-                          textAlign: 'center',
-                          width: '11%',
                           position: 'sticky',
                           top: 0,
                           zIndex: 11,
-                          minWidth: '100px'
+                          textAlign: 'center',
+                          width: '6%',
+                          minWidth: '50px'
                         }}
                       >
                         Actions
@@ -1245,13 +1777,13 @@ const DashboardPage = () => {
                           </TableCell>
                           <TableCell sx={{ verticalAlign: 'top' }}>
                             <Box>
-                              <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.25, fontSize: '0.875rem' }}>
+                              <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.25 }}>
                                 {new Date(booking.bookingDate).toLocaleDateString('en-US', { 
                                   month: 'short', 
                                   day: 'numeric'
                                 })}
                               </Typography>
-                              <Typography variant="caption" color="primary.main" fontWeight="medium" sx={{ fontSize: '0.75rem' }}>
+                              <Typography variant="caption" color="primary.main" fontWeight="medium">
                                 {booking.startTime}
                               </Typography>
                             </Box>
@@ -1359,48 +1891,66 @@ const DashboardPage = () => {
                               </Typography>
                             )}
                           </TableCell>
-                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-                              <AccessTimeIcon fontSize="small" color="primary" />
+                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top', padding: '4px 2px' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
+                              <AccessTimeIcon sx={{ fontSize: '16px' }} color="primary" />
                               <Chip
                                 label={formatDuration(booking.duration)}
                                 size="small"
                                 variant="outlined"
                                 color="primary"
-                                sx={{ fontWeight: 'bold' }}
+                                sx={{ 
+                                  fontWeight: 'bold',
+                                  fontSize: '0.75rem',
+                                  height: '22px',
+                                  '& .MuiChip-label': {
+                                    padding: '0 6px'
+                                  }
+                                }}
                               />
                             </Box>
                           </TableCell>
                           
                           {/* Extended Time Column */}
-                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top' }}>
+                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top', padding: '4px 2px' }}>
                             {booking.extendedTime > 0 ? (
-                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-                                <TrendingUpIcon fontSize="small" color="warning" />
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
+                                <TrendingUpIcon sx={{ fontSize: '10px' }} color="warning" />
                                 <Chip
                                   label={`+${formatDuration(booking.extendedTime)}`}
                                   size="small"
                                   variant="filled"
                                   color="warning"
-                                  sx={{ fontWeight: 'bold' }}
+                                  sx={{ 
+                                    fontWeight: 'bold',
+                                    fontSize: '0.6rem',
+                                    height: '18px',
+                                    '& .MuiChip-label': {
+                                      padding: '0 3px'
+                                    }
+                                  }}
                                 />
                               </Box>
                             ) : (
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                                 -
                               </Typography>
                             )}
                           </TableCell>
                           
                           {/* Extension Fee Column */}
-                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top' }}>
+                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top', padding: '4px 2px' }}>
                             {booking.extendedTime > 0 ? (
                               <Box>
                                 <Typography 
                                   variant="body2" 
                                   fontWeight="bold" 
                                   color="warning.main"
-                                  sx={{ fontFamily: 'monospace', mb: 0.5 }}
+                                  sx={{ 
+                                    fontFamily: 'monospace', 
+                                    mb: 0.1,
+                                    fontSize: '0.65rem'
+                                  }}
                                 >
                                   ₹{booking.extensionPaymentAmount?.toLocaleString() || '0'}
                                 </Typography>
@@ -1413,7 +1963,14 @@ const DashboardPage = () => {
                                   color={booking.extensionPaymentStatus === 'completed' ? 'success' : 
                                          booking.extensionPaymentStatus === 'pending' ? 'warning' : 
                                          booking.extensionPaymentStatus === 'failed' ? 'error' : 'default'}
-                                  sx={{ fontWeight: 'bold', fontSize: '0.7rem' }}
+                                  sx={{ 
+                                    fontWeight: 'bold', 
+                                    fontSize: '0.6rem',
+                                    height: '16px',
+                                    '& .MuiChip-label': {
+                                      padding: '0 3px'
+                                    }
+                                  }}
                                 />
                               </Box>
                             ) : (
@@ -1433,16 +1990,16 @@ const DashboardPage = () => {
                               ₹{booking.totalPrice?.toLocaleString() || '0'}
                             </Typography>
                           </TableCell>
-                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top' }}>
+                          <TableCell sx={{ textAlign: 'center', verticalAlign: 'top', padding: '4px 2px' }}>
                             <Chip 
-                              label={booking.permanentlyCancelled ? 'Permanently Cancelled' : booking.status}
+                              label={booking.permanentlyCancelled ? 'Cancelled' : booking.status}
                               icon={
-                                booking.permanentlyCancelled ? <DeleteIcon fontSize="small" /> :
-                                booking.status === 'Booked' ? <BookingsIcon fontSize="small" /> :
-                                booking.status === 'Confirmed' ? <BookingsIcon fontSize="small" /> : 
-                                booking.status === 'Active' ? <PlayArrowIcon fontSize="small" /> :
-                                booking.status === 'Completed' ? <StarIcon fontSize="small" /> : 
-                                booking.status === 'Cancelled' ? <DeleteIcon fontSize="small" /> : null
+                                booking.permanentlyCancelled ? <DeleteIcon sx={{ fontSize: '10px' }} /> :
+                                booking.status === 'Booked' ? <BookingsIcon sx={{ fontSize: '10px' }} /> :
+                                booking.status === 'Confirmed' ? <BookingsIcon sx={{ fontSize: '10px' }} /> : 
+                                booking.status === 'Active' ? <PlayArrowIcon sx={{ fontSize: '10px' }} /> :
+                                booking.status === 'Completed' ? <StarIcon sx={{ fontSize: '10px' }} /> : 
+                                booking.status === 'Cancelled' ? <DeleteIcon sx={{ fontSize: '10px' }} /> : null
                               }
                               color={
                                 booking.permanentlyCancelled ? 'error' :
@@ -1455,14 +2012,16 @@ const DashboardPage = () => {
                               size="small"
                               sx={{ 
                                 fontWeight: 'bold',
-                                '& .MuiChip-icon': {
-                                  fontSize: '16px'
+                                fontSize: '0.65rem',
+                                height: '20px',
+                                '& .MuiChip-label': {
+                                  padding: '0 4px'
                                 }
                               }}
                             />
                           </TableCell>
-                          <TableCell align="center" sx={{ verticalAlign: 'top' }}>
-                            <Stack direction="column" spacing={0.25} alignItems="center" sx={{ minHeight: '50px', justifyContent: 'flex-start', pt: 0.5 }}>
+                          <TableCell align="center" sx={{ verticalAlign: 'top', padding: '4px 2px' }}>
+                            <Stack direction="column" spacing={0.25} alignItems="center" sx={{ minHeight: '35px', justifyContent: 'flex-start', pt: 0.5 }}>
                               {booking.status === 'Booked' && (
                                 <>
                                   <Button 
@@ -1471,11 +2030,11 @@ const DashboardPage = () => {
                                     color="primary"
                                     onClick={() => handleStartSession(booking)}
                                     sx={{ 
-                                      mb: 0.5, 
+                                      mb: 0.25, 
                                       fontSize: '0.7rem', 
-                                      py: 0.125, 
-                                      px: 0.75, 
-                                      minWidth: '60px',
+                                      py: 0.2, 
+                                      px: 0.5, 
+                                      minWidth: '50px',
                                       height: '24px'
                                     }}
                                   >
@@ -1502,6 +2061,13 @@ const DashboardPage = () => {
                                           variant="outlined" 
                                           color="error" 
                                           onClick={() => handleCancelBooking(booking._id, booking.customer?.name || booking.walkInCustomerName || 'Walk-in Customer')}
+                                          sx={{ 
+                                            fontSize: '0.7rem', 
+                                            py: 0.2, 
+                                            px: 0.5, 
+                                            minWidth: '50px',
+                                            height: '24px'
+                                          }}
                                         >
                                           Cancel
                                         </Button>
@@ -1523,7 +2089,14 @@ const DashboardPage = () => {
                                     variant="outlined" 
                                     color="info" 
                                     onClick={() => handleExtendBooking(booking)}
-                                    sx={{ mb: 0.5 }}
+                                    sx={{ 
+                                      mb: 0.25, 
+                                      fontSize: '0.7rem', 
+                                      py: 0.2, 
+                                      px: 0.5, 
+                                      minWidth: '50px',
+                                      height: '24px'
+                                    }}
                                   >
                                     Extend
                                   </Button>
@@ -1548,6 +2121,13 @@ const DashboardPage = () => {
                                           variant="outlined" 
                                           color="error" 
                                           onClick={() => handleCancelBooking(booking._id, booking.customer?.name || booking.walkInCustomerName || 'Walk-in Customer')}
+                                          sx={{ 
+                                            fontSize: '0.7rem', 
+                                            py: 0.2, 
+                                            px: 0.5, 
+                                            minWidth: '50px',
+                                            height: '24px'
+                                          }}
                                         >
                                           Cancel
                                         </Button>
@@ -1569,7 +2149,14 @@ const DashboardPage = () => {
                                     variant="outlined" 
                                     color="info" 
                                     onClick={() => handleExtendBooking(booking)}
-                                    sx={{ mb: 0.5 }}
+                                    sx={{ 
+                                      mb: 0.25, 
+                                      fontSize: '0.7rem', 
+                                      py: 0.2, 
+                                      px: 0.5, 
+                                      minWidth: '50px',
+                                      height: '24px'
+                                    }}
                                   >
                                     Extend
                                   </Button>
@@ -1594,6 +2181,13 @@ const DashboardPage = () => {
                                           variant="outlined" 
                                           color="error" 
                                           onClick={() => handleCancelBooking(booking._id, booking.customer?.name || booking.walkInCustomerName || 'Walk-in Customer')}
+                                          sx={{ 
+                                            fontSize: '0.7rem', 
+                                            py: 0.2, 
+                                            px: 0.5, 
+                                            minWidth: '50px',
+                                            height: '24px'
+                                          }}
                                         >
                                           Cancel
                                         </Button>

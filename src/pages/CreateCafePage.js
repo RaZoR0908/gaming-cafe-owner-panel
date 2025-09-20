@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // RESTORED: This is the real hook for navigation.
+import { useNavigate, Link } from 'react-router-dom'; // RESTORED: This is the real hook for navigation.
 import { useDropzone } from 'react-dropzone';
 import cafeService from '../services/cafeService'; // RESTORED: This will now use your actual service file.
 
@@ -13,6 +13,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
+import Business from '@mui/icons-material/Business';
 
 const steps = ['Basic Details', 'Rooms & Systems', 'Manage Photos'];
 
@@ -362,32 +363,262 @@ const CreateCafePage = () => {
   };
 
   return (
-    <Box sx={{ backgroundColor: '#f0f2f5', minHeight: '100vh', pb: 4 }}>
-      <nav style={{ backgroundColor: '#333', padding: '15px 30px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h5" component="span" sx={{ fontWeight: 'bold' }}>Owner Panel</Typography>
-        <Button href="/dashboard" sx={{ color: 'white' }}>Back to Dashboard</Button>
-      </nav>
-      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-        <Card>
-          <CardContent sx={{ p: 4 }}>
-            <Typography variant="h4" component="h1" align="center" gutterBottom>Create Your Cafe</Typography>
-            <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-              {steps.map((label) => (<Step key={label}><StepLabel>{label}</StepLabel></Step>))}
+    <Box sx={{ 
+      minHeight: '100vh', 
+      background: '#f8fafc',
+      position: 'relative'
+    }}>
+
+      {/* Professional Navigation */}
+      <Box
+        sx={{
+          background: '#ffffff',
+          borderBottom: '1px solid #e2e8f0',
+          px: 4,
+          py: 2,
+          position: 'sticky',
+          top: 0,
+          zIndex: 1000,
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  backgroundColor: '#eff6ff',
+                  border: '1px solid #dbeafe'
+                }}
+              >
+                <Business sx={{ color: '#3b82f6', fontSize: 24 }} />
+              </Box>
+              <Typography 
+                variant="h5" 
+                component="span" 
+                sx={{ 
+                  fontWeight: 700, 
+                  color: '#1e293b'
+                }}
+              >
+                Create Your Cafe
+              </Typography>
+            </Box>
+            <Button 
+              component={Link}
+              to="/dashboard" 
+              sx={{ 
+                color: '#64748b',
+                backgroundColor: '#f1f5f9',
+                border: '1px solid #e2e8f0',
+                borderRadius: 1,
+                px: 3,
+                py: 1,
+                fontWeight: 600,
+                '&:hover': {
+                  backgroundColor: '#e2e8f0',
+                  transform: 'translateY(-1px)',
+                }
+              }}
+            >
+              Back to Dashboard
+            </Button>
+          </Box>
+        </Container>
+      </Box>
+
+      <Container maxWidth="lg" sx={{ py: 4, position: 'relative', zIndex: 1 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: 2,
+            overflow: 'hidden',
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+          }}
+        >
+          <CardContent sx={{ p: 6 }}>
+            {/* Header Section */}
+            <Box sx={{ textAlign: 'center', mb: 6 }}>
+              <Typography variant="h3" component="h1" sx={{ 
+                fontWeight: 700, 
+                mb: 2,
+                color: '#1e293b'
+              }}>
+                Set Up Your Cafe
+              </Typography>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  maxWidth: 600, 
+                  mx: 'auto',
+                  color: '#64748b',
+                  fontWeight: 400
+                }}
+              >
+                Follow the steps below to create your cafe profile and start managing bookings
+              </Typography>
+            </Box>
+
+            {/* Professional Stepper */}
+            <Stepper 
+              activeStep={activeStep} 
+              sx={{ 
+                mb: 6,
+                '& .MuiStepLabel-root': {
+                  '& .MuiStepLabel-label': {
+                    fontSize: '1rem',
+                    fontWeight: 600
+                  }
+                },
+                '& .MuiStepIcon-root': {
+                  fontSize: '2rem',
+                  '&.Mui-completed': {
+                    color: '#2e7d32'
+                  },
+                  '&.Mui-active': {
+                    color: '#1976d2'
+                  }
+                }
+              }}
+            >
+              {steps.map((label, index) => (
+                <Step key={label}>
+                  <StepLabel 
+                    sx={{
+                      '& .MuiStepLabel-label': {
+                        color: activeStep === index ? '#1976d2' : 
+                               activeStep > index ? '#2e7d32' : 'text.secondary'
+                      }
+                    }}
+                  >
+                    {label}
+                  </StepLabel>
+                </Step>
+              ))}
             </Stepper>
-            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-            <Box sx={{ mt: 2 }}>{getStepContent(activeStep)}</Box>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
-              <Button disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>Back</Button>
+
+            {/* Error Alert */}
+            {error && (
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: 4,
+                  borderRadius: 2,
+                  '& .MuiAlert-message': {
+                    fontSize: '1rem'
+                  }
+                }}
+              >
+                {error}
+              </Alert>
+            )}
+
+            {/* Step Content */}
+            <Box sx={{ 
+              minHeight: 400,
+              mb: 4,
+              p: 3,
+              backgroundColor: 'rgba(248, 250, 252, 0.5)',
+              borderRadius: 3,
+              border: '1px solid rgba(226, 232, 240, 0.5)'
+            }}>
+              {getStepContent(activeStep)}
+            </Box>
+
+            {/* Navigation Buttons */}
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              pt: 4,
+              borderTop: '1px solid rgba(226, 232, 240, 0.5)'
+            }}>
+              <Button 
+                disabled={activeStep === 0} 
+                onClick={handleBack} 
+                sx={{ 
+                  px: 4,
+                  py: 1.5,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  color: 'text.secondary',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+                  },
+                  '&:disabled': {
+                    backgroundColor: 'transparent',
+                    color: 'text.disabled'
+                  }
+                }}
+              >
+                Back
+              </Button>
+              
               {activeStep === steps.length - 1 ? (
-                <Button variant="contained" onClick={handleSubmit} disabled={loading || uploading}>
+                <Button 
+                  variant="contained" 
+                  onClick={handleSubmit} 
+                  disabled={loading || uploading}
+                  sx={{
+                    px: 6,
+                    py: 1.5,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    background: 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)',
+                    boxShadow: '0 4px 14px 0 rgba(46, 125, 50, 0.39)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #1b5e20 0%, #0d3e0d 100%)',
+                      boxShadow: '0 6px 20px 0 rgba(46, 125, 50, 0.5)',
+                      transform: 'translateY(-1px)',
+                    },
+                    '&:disabled': {
+                      background: 'rgba(0, 0, 0, 0.12)',
+                      color: 'rgba(0, 0, 0, 0.26)',
+                      boxShadow: 'none',
+                    }
+                  }}
+                >
                   {loading || uploading ? 'Creating Cafe...' : 'Create Cafe'}
                 </Button>
               ) : (
-                <Button variant="contained" onClick={handleNext}>Next</Button>
+                <Button 
+                  variant="contained" 
+                  onClick={handleNext}
+                  sx={{
+                    px: 6,
+                    py: 1.5,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                    boxShadow: '0 4px 14px 0 rgba(25, 118, 210, 0.39)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+                      boxShadow: '0 6px 20px 0 rgba(25, 118, 210, 0.5)',
+                      transform: 'translateY(-1px)',
+                    }
+                  }}
+                >
+                  Next
+                </Button>
               )}
             </Box>
           </CardContent>
-        </Card>
+        </Paper>
       </Container>
     </Box>
   );

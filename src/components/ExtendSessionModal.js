@@ -14,10 +14,11 @@ const modalStyle = {
   transform: 'translate(-50%, -50%)',
   width: { xs: '95%', sm: '90%', md: 600 },
   maxHeight: '90vh',
-  bgcolor: 'background.paper',
-  boxShadow: 24,
+  background: '#ffffff',
+  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
   p: 4,
-  borderRadius: 2,
+  borderRadius: '12px',
+  border: '1px solid #e2e8f0',
   overflow: 'auto',
 };
 
@@ -118,7 +119,11 @@ const ExtendSessionModal = ({ open, onClose, booking, onExtend }) => {
   return (
     <Modal open={open} onClose={onClose}>
       <Box sx={modalStyle}>
-        <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+        <Typography variant="h5" component="h2" gutterBottom sx={{ 
+          fontWeight: 700, 
+          color: '#1e293b',
+          fontSize: { xs: '1.4rem', md: '1.6rem' }
+        }}>
           Extend Session
         </Typography>
 

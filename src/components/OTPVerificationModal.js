@@ -14,10 +14,11 @@ const modalStyle = {
   transform: 'translate(-50%, -50%)',
   width: { xs: '95%', sm: '400px' },
   maxWidth: 500,
-  bgcolor: 'background.paper',
-  boxShadow: 24,
+  background: '#ffffff',
+  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
   p: 3,
-  borderRadius: 2,
+  borderRadius: '12px',
+  border: '1px solid #e2e8f0',
   outline: 'none',
 };
 
@@ -76,8 +77,20 @@ const OTPVerificationModal = ({
   return (
     <Modal open={open} onClose={handleClose}>
       <Box sx={modalStyle}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h5" component="h2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 2
+        }}>
+          <Typography variant="h5" component="h2" sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1,
+            fontWeight: 700,
+            color: '#1e293b',
+            fontSize: { xs: '1.4rem', md: '1.6rem' }
+          }}>
             <VpnKeyIcon color="primary" />
             Verify OTP
           </Typography>

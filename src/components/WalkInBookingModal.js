@@ -17,10 +17,11 @@ const modalStyle = {
   transform: 'translate(-50%, -50%)',
   width: { xs: '95%', sm: '90%', md: 700 },
   maxHeight: '90vh',
-  bgcolor: 'background.paper',
-  boxShadow: 24,
+  background: '#ffffff',
+  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
   p: 4,
-  borderRadius: 2,
+  borderRadius: '12px',
+  border: '1px solid #e2e8f0',
   overflow: 'auto',
 };
 
@@ -179,10 +180,18 @@ const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
 
   if (!myCafe) return null;
 
+  // Debug logging
+  console.log('WalkInBookingModal - myCafe:', myCafe);
+  console.log('WalkInBookingModal - rooms:', myCafe.rooms);
+
   return (
     <Modal open={open} onClose={onClose}>
       <Box sx={modalStyle} component="form" onSubmit={handleSubmit}>
-        <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+        <Typography variant="h5" component="h2" gutterBottom sx={{ 
+          fontWeight: 700, 
+          color: '#1e293b',
+          fontSize: { xs: '1.4rem', md: '1.6rem' }
+        }}>
           Walk-in Booking
         </Typography>
         
@@ -319,12 +328,34 @@ const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
                       value={system.roomType}
                       onChange={(e) => handleSystemChange(index, 'roomType', e.target.value)}
                       label="Room"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                          backgroundColor: '#ffffff',
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#3b82f6',
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#3b82f6',
+                          },
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: '#6b7280',
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: '#3b82f6',
+                        },
+                      }}
                     >
-                      {myCafe.rooms.map(room => (
-                        <MenuItem key={room.name} value={room.name}>
-                          {room.name}
-                        </MenuItem>
-                      ))}
+                      {myCafe.rooms && myCafe.rooms.length > 0 ? (
+                        myCafe.rooms.map(room => (
+                          <MenuItem key={room.name} value={room.name}>
+                            {room.name}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <MenuItem disabled>No rooms available</MenuItem>
+                      )}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -336,12 +367,38 @@ const WalkInBookingModal = ({ open, onClose, myCafe, onSubmit }) => {
                       value={system.systemType}
                       onChange={(e) => handleSystemChange(index, 'systemType', e.target.value)}
                       label="System"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                          backgroundColor: '#ffffff',
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#3b82f6',
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#3b82f6',
+                          },
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: '#6b7280',
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: '#3b82f6',
+                        },
+                      }}
                     >
-                      {getSystemTypesForRoom(system.roomType).map(systemInfo => (
-                        <MenuItem key={systemInfo.type} value={systemInfo.type}>
-                          {systemInfo.type} - ₹{systemInfo.pricePerHour}/hr
-                        </MenuItem>
-                      ))}
+                      {system.roomType ? (
+                        getSystemTypesForRoom(system.roomType).length > 0 ? (
+                          getSystemTypesForRoom(system.roomType).map(systemInfo => (
+                            <MenuItem key={systemInfo.type} value={systemInfo.type}>
+                              {systemInfo.type} - ₹{systemInfo.pricePerHour}/hr
+                            </MenuItem>
+                          ))
+                        ) : (
+                          <MenuItem disabled>No systems available for this room</MenuItem>
+                        )
+                      ) : (
+                        <MenuItem disabled>Please select a room first</MenuItem>
+                      )}
                     </Select>
                   </FormControl>
                 </Grid>

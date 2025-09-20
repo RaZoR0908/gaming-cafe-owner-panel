@@ -20,13 +20,14 @@ const modalStyle = {
   transform: 'translate(-50%, -50%)',
   width: { xs: '95%', sm: '90%', md: '80%', lg: '70%' },
   maxWidth: 1200,
-  maxHeight: '85vh', // Reduced from 90vh
-  bgcolor: 'background.paper',
-  boxShadow: 24,
-  p: 2, // Reduced padding from 3 to 2
-  borderRadius: 2,
+  maxHeight: '85vh',
+  background: '#ffffff',
+  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+  p: 3,
+  borderRadius: '12px',
+  border: '1px solid #e2e8f0',
   overflow: 'auto',
-  zIndex: 9999, // Add explicit z-index
+  zIndex: 9999,
 };
 
 // Helper function to calculate remaining time
@@ -471,8 +472,17 @@ const SystemManagementModal = ({
         }} onClick={onClose}>
           <div onClick={(e) => e.stopPropagation()}>
             <Box sx={modalStyle}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}> {/* Reduced margin from 2 to 1.5 */}
-          <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 2
+        }}>
+          <Typography variant="h5" component="h2" sx={{ 
+            fontWeight: 700, 
+            color: '#1e293b',
+            fontSize: { xs: '1.4rem', md: '1.6rem' }
+          }}>
             {mode === 'assignment' ? 'Assign Systems & Start Session' : 'System Management'}
           </Typography>
           <Button 

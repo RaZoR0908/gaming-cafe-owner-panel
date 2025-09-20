@@ -15,6 +15,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete'; // Import the Delete icon
+import Business from '@mui/icons-material/Business';
 
 const steps = ['Basic Details', 'Rooms & Systems', 'Manage Photos'];
 
@@ -389,71 +390,293 @@ const EditCafePage = () => {
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><CircularProgress /></Box>;
 
   return (
-    <Box sx={{ backgroundColor: '#f0f2f5', minHeight: '100vh', pb: 4 }}>
-        <Modal
-            open={showSuccessModal}
-            aria-labelledby="success-modal-title"
-            aria-describedby="success-modal-description"
-        >
-            <Box sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: 400,
-                bgcolor: 'background.paper',
-                border: '2px solid #4caf50',
-                boxShadow: 24,
-                p: 4,
-                textAlign: 'center',
-                borderRadius: 2,
-            }}>
-                <CheckCircleIcon sx={{ fontSize: 60, color: 'success.main' }} />
-                <Typography id="success-modal-title" variant="h6" component="h2" sx={{ mt: 2 }}>
-                    Cafe Edited Successfully!
-                </Typography>
-                <Typography id="success-modal-description" sx={{ mt: 1 }}>
-                    You will be redirected to the dashboard shortly.
-                </Typography>
-            </Box>
-        </Modal>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      background: '#f8fafc',
+      position: 'relative'
+    }}>
 
-      <nav style={{ backgroundColor: '#333', padding: '15px 30px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h5" component="span" sx={{ fontWeight: 'bold' }}>Owner Panel</Typography>
-        <Button component={Link} to="/dashboard" sx={{ color: 'white' }}>Back to Dashboard</Button>
-      </nav>
-      <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Card>
-          <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
-            <Typography variant="h4" component="h1" align="center" gutterBottom>Edit Your Cafe</Typography>
-            <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-              {steps.map((label) => (
-                <Step key={label}><StepLabel>{label}</StepLabel></Step>
+      {/* Success Modal */}
+      <Modal
+        open={showSuccessModal}
+        aria-labelledby="success-modal-title"
+        aria-describedby="success-modal-description"
+      >
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: { xs: '90%', sm: 400 },
+          bgcolor: 'background.paper',
+          border: '2px solid #4caf50',
+          boxShadow: 24,
+          p: 4,
+          textAlign: 'center',
+          borderRadius: 4,
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+        }}>
+          <CheckCircleIcon sx={{ fontSize: 60, color: 'success.main' }} />
+          <Typography id="success-modal-title" variant="h6" component="h2" sx={{ mt: 2, fontWeight: 600 }}>
+            Cafe Updated Successfully!
+          </Typography>
+          <Typography id="success-modal-description" sx={{ mt: 1, color: 'text.secondary' }}>
+            You will be redirected to the dashboard shortly.
+          </Typography>
+        </Box>
+      </Modal>
+
+      {/* Professional Navigation */}
+      <Box
+        sx={{
+          background: '#ffffff',
+          borderBottom: '1px solid #e2e8f0',
+          px: 4,
+          py: 2,
+          position: 'sticky',
+          top: 0,
+          zIndex: 1000,
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  backgroundColor: '#fef3c7',
+                  border: '1px solid #fde68a'
+                }}
+              >
+                <Business sx={{ color: '#f59e0b', fontSize: 24 }} />
+              </Box>
+              <Typography 
+                variant="h5" 
+                component="span" 
+                sx={{ 
+                  fontWeight: 700, 
+                  color: '#1e293b'
+                }}
+              >
+                Edit Your Cafe
+              </Typography>
+            </Box>
+            <Button 
+              component={Link}
+              to="/dashboard" 
+              sx={{ 
+                color: '#64748b',
+                backgroundColor: '#f1f5f9',
+                border: '1px solid #e2e8f0',
+                borderRadius: 1,
+                px: 3,
+                py: 1,
+                fontWeight: 600,
+                '&:hover': {
+                  backgroundColor: '#e2e8f0',
+                  transform: 'translateY(-1px)',
+                }
+              }}
+            >
+              Back to Dashboard
+            </Button>
+          </Box>
+        </Container>
+      </Box>
+
+      <Container maxWidth="lg" sx={{ py: 4, position: 'relative', zIndex: 1 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: 2,
+            overflow: 'hidden',
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+          }}
+        >
+          <CardContent sx={{ p: 6 }}>
+            {/* Header Section */}
+            <Box sx={{ textAlign: 'center', mb: 6 }}>
+              <Typography variant="h3" component="h1" sx={{ 
+                fontWeight: 700, 
+                mb: 2,
+                color: '#1e293b'
+              }}>
+                Update Your Cafe
+              </Typography>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  maxWidth: 600, 
+                  mx: 'auto',
+                  color: '#64748b',
+                  fontWeight: 400
+                }}
+              >
+                Modify your cafe details, systems, and photos to keep your profile up to date
+              </Typography>
+            </Box>
+
+            {/* Professional Stepper */}
+            <Stepper 
+              activeStep={activeStep} 
+              sx={{ 
+                mb: 6,
+                '& .MuiStepLabel-root': {
+                  '& .MuiStepLabel-label': {
+                    fontSize: '1rem',
+                    fontWeight: 600
+                  }
+                },
+                '& .MuiStepIcon-root': {
+                  fontSize: '2rem',
+                  '&.Mui-completed': {
+                    color: '#2e7d32'
+                  },
+                  '&.Mui-active': {
+                    color: '#f57c00'
+                  }
+                }
+              }}
+            >
+              {steps.map((label, index) => (
+                <Step key={label}>
+                  <StepLabel 
+                    sx={{
+                      '& .MuiStepLabel-label': {
+                        color: activeStep === index ? '#f57c00' : 
+                               activeStep > index ? '#2e7d32' : 'text.secondary'
+                      }
+                    }}
+                  >
+                    {label}
+                  </StepLabel>
+                </Step>
               ))}
             </Stepper>
-            
-            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-            
-            <Box sx={{ mt: 2 }}>
+
+            {/* Error Alert */}
+            {error && (
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: 4,
+                  borderRadius: 2,
+                  '& .MuiAlert-message': {
+                    fontSize: '1rem'
+                  }
+                }}
+              >
+                {error}
+              </Alert>
+            )}
+
+            {/* Step Content */}
+            <Box sx={{ 
+              minHeight: 400,
+              mb: 4,
+              p: 3,
+              backgroundColor: 'rgba(248, 250, 252, 0.5)',
+              borderRadius: 3,
+              border: '1px solid rgba(226, 232, 240, 0.5)'
+            }}>
               {getStepContent(activeStep)}
             </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
-              <Button disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>
+            {/* Navigation Buttons */}
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              pt: 4,
+              borderTop: '1px solid rgba(226, 232, 240, 0.5)'
+            }}>
+              <Button 
+                disabled={activeStep === 0} 
+                onClick={handleBack} 
+                sx={{ 
+                  px: 4,
+                  py: 1.5,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  color: 'text.secondary',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+                  },
+                  '&:disabled': {
+                    backgroundColor: 'transparent',
+                    color: 'text.disabled'
+                  }
+                }}
+              >
                 Back
               </Button>
+              
               {activeStep === steps.length - 1 ? (
-                <Button variant="contained" onClick={handleSubmit} disabled={loading || uploading}>
+                <Button 
+                  variant="contained" 
+                  onClick={handleSubmit} 
+                  disabled={loading || uploading}
+                  sx={{
+                    px: 6,
+                    py: 1.5,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    background: 'linear-gradient(135deg, #f57c00 0%, #e65100 100%)',
+                    boxShadow: '0 4px 14px 0 rgba(245, 124, 0, 0.39)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #e65100 0%, #bf360c 100%)',
+                      boxShadow: '0 6px 20px 0 rgba(245, 124, 0, 0.5)',
+                      transform: 'translateY(-1px)',
+                    },
+                    '&:disabled': {
+                      background: 'rgba(0, 0, 0, 0.12)',
+                      color: 'rgba(0, 0, 0, 0.26)',
+                      boxShadow: 'none',
+                    }
+                  }}
+                >
                   {loading || uploading ? 'Saving Changes...' : 'Save Changes'}
                 </Button>
               ) : (
-                <Button variant="contained" onClick={handleNext}>
+                <Button 
+                  variant="contained" 
+                  onClick={handleNext}
+                  sx={{
+                    px: 6,
+                    py: 1.5,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    background: 'linear-gradient(135deg, #f57c00 0%, #e65100 100%)',
+                    boxShadow: '0 4px 14px 0 rgba(245, 124, 0, 0.39)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #e65100 0%, #bf360c 100%)',
+                      boxShadow: '0 6px 20px 0 rgba(245, 124, 0, 0.5)',
+                      transform: 'translateY(-1px)',
+                    }
+                  }}
+                >
                   Next
                 </Button>
               )}
             </Box>
           </CardContent>
-        </Card>
+        </Paper>
       </Container>
     </Box>
   );
