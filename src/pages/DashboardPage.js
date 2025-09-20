@@ -1482,7 +1482,20 @@ const DashboardPage = () => {
                                     Start
                                   </Button>
                                   {canCancel && (
-                                    <Tooltip title="Cancel is only available within 15 minutes of session start">
+                                    <Tooltip title={
+                                      (() => {
+                                        const today = new Date();
+                                        const bookingDate = new Date(booking.bookingDate);
+                                        const bookingDateOnly = new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate());
+                                        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                                        
+                                        if (bookingDateOnly.getTime() === todayOnly.getTime()) {
+                                          return "Cancel within 15 minutes of booking time";
+                                        } else {
+                                          return "Cancel until booking day arrives";
+                                        }
+                                      })()
+                                    }>
                                       <span>
                                         <Button 
                                           size="small" 
@@ -1515,7 +1528,20 @@ const DashboardPage = () => {
                                     Extend
                                   </Button>
                                   {canCancel && (
-                                    <Tooltip title="Cancel is only available within 15 minutes of session start">
+                                    <Tooltip title={
+                                      (() => {
+                                        const today = new Date();
+                                        const bookingDate = new Date(booking.bookingDate);
+                                        const bookingDateOnly = new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate());
+                                        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                                        
+                                        if (bookingDateOnly.getTime() === todayOnly.getTime()) {
+                                          return "Cancel within 15 minutes of booking time";
+                                        } else {
+                                          return "Cancel until booking day arrives";
+                                        }
+                                      })()
+                                    }>
                                       <span>
                                         <Button 
                                           size="small" 
@@ -1548,7 +1574,20 @@ const DashboardPage = () => {
                                     Extend
                                   </Button>
                                   {canCancel && (
-                                    <Tooltip title="Cancel is only available within 15 minutes of session start">
+                                    <Tooltip title={
+                                      (() => {
+                                        const today = new Date();
+                                        const bookingDate = new Date(booking.bookingDate);
+                                        const bookingDateOnly = new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate());
+                                        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                                        
+                                        if (bookingDateOnly.getTime() === todayOnly.getTime()) {
+                                          return "Cancel within 15 minutes of booking time";
+                                        } else {
+                                          return "Cancel until booking day arrives";
+                                        }
+                                      })()
+                                    }>
                                       <span>
                                         <Button 
                                           size="small" 
