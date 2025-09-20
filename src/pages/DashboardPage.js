@@ -29,6 +29,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ComputerIcon from '@mui/icons-material/Computer';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import TimerIcon from '@mui/icons-material/Timer';
+import DownloadIcon from '@mui/icons-material/Download';
 
 
 // Helper function to format duration
@@ -367,7 +368,165 @@ const DashboardPage = () => {
     fetchReviews();
   };
 
+  const handleDownloadPDF = () => {
+    // Create PDF content
+    const formatDate = (dateString) => {
+      return new Date(dateString).toLocaleDateString('en-US', { 
+        year: 'numeric',
+        month: 'short', 
+        day: 'numeric' 
+      });
+    };
 
+    const formatTime = (timeString) => {
+      return timeString || 'N/A';
+    };
+
+    const formatPrice = (price) => {
+      return `₹${price?.toLocaleString() || '0'}`;
+    };
+
+    const formatStatus = (booking) => {
+      return booking.permanentlyCancelled ? 'Cancelled' : booking.status;
+    };
+
+    const getCustomerName = (booking) => {
+      return booking.customer ? booking.customer.name : (booking.walkInCustomerName || 'Walk-in Customer');
+    };
+
+    const getPhoneNumber = (booking) => {
+      if (booking.phoneNumber && booking.phoneNumber !== 'Not provided') {
+        return booking.phoneNumber;
+      }
+      return 'No phone';
+    };
+
+    const getRoomSystem = (booking) => {
+      if (booking.systemsBooked && booking.systemsBooked.length > 0) {
+        const uniqueRooms = [...new Set(booking.systemsBooked.map(s => s.roomType))];
+        const isSingleRoom = uniqueRooms.length === 1;
+        
+        if (isSingleRoom) {
+          return `${uniqueRooms[0]} - ${booking.systemsBooked.map(s => `${s.systemType} × ${s.numberOfSystems}`).join(', ')}`;
+        } else {
+          return booking.systemsBooked.map(s => `${s.roomType}: ${s.systemType} × ${s.numberOfSystems}`).join(', ');
+        }
+      } else {
+        return `${booking.roomType || 'N/A'} - ${booking.systemType} × ${booking.numberOfSystems || 1}`;
+      }
+    };
+
+    const getAssignedSystems = (booking) => {
+      if (booking.assignedSystems && booking.assignedSystems.length > 0) {
+        return booking.assignedSystems.map(s => s.systemId).join(', ');
+      }
+      return booking.status === 'Booked' ? 'Pending Assignment' : '-';
+    };
+
+    // Generate PDF content
+    let pdfContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Booking Report - ${myCafe?.name || 'Gaming Cafe'}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .cafe-name { font-size: 24px; font-weight: bold; color: #1976d2; }
+        .report-title { font-size: 18px; margin: 10px 0; }
+        .date-filter { font-size: 14px; color: #666; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+        th { background-color: #1976d2; color: white; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .price { font-weight: bold; color: #2e7d32; }
+        .status-cancelled { color: #d32f2f; font-weight: bold; }
+        .status-active { color: #ed6c02; font-weight: bold; }
+        .status-completed { color: #2e7d32; font-weight: bold; }
+        .status-booked { color: #0288d1; font-weight: bold; }
+        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="cafe-name">${myCafe?.name || 'Gaming Cafe'}</div>
+        <div class="report-title">Booking Report</div>
+        <div class="date-filter">
+            ${filterDate ? `Date: ${formatDate(filterDate)}` : 'All Bookings'} | 
+            Generated on: ${new Date().toLocaleString()}
+        </div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Booking Date</th>
+                <th>Start Time</th>
+                <th>Room/System</th>
+                <th>Assigned Systems</th>
+                <th>Duration</th>
+                <th>Extended</th>
+                <th>Price</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+`;
+
+    displayedBookings.forEach((booking, index) => {
+      const statusClass = booking.permanentlyCancelled || booking.status === 'Cancelled' ? 'status-cancelled' :
+                         booking.status === 'Active' ? 'status-active' :
+                         booking.status === 'Completed' ? 'status-completed' :
+                         booking.status === 'Booked' ? 'status-booked' : '';
+
+      pdfContent += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${getCustomerName(booking)}</td>
+                <td>${getPhoneNumber(booking)}</td>
+                <td>${formatDate(booking.bookingDate)}</td>
+                <td>${formatTime(booking.startTime)}</td>
+                <td>${getRoomSystem(booking)}</td>
+                <td>${getAssignedSystems(booking)}</td>
+                <td>${formatDuration(booking.duration)}</td>
+                <td>${booking.extendedTime > 0 ? `+${formatDuration(booking.extendedTime)}` : '-'}</td>
+                <td class="price">${formatPrice(booking.totalPrice)}</td>
+                <td class="${statusClass}">${formatStatus(booking)}</td>
+            </tr>
+`;
+    });
+
+    pdfContent += `
+        </tbody>
+    </table>
+    
+    <div class="footer">
+        <p>Total Bookings: ${displayedBookings.length}</p>
+        <p>Total Revenue: ₹${displayedBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0).toLocaleString()}</p>
+        <p>Report generated from ${myCafe?.name || 'Gaming Cafe'} Dashboard</p>
+    </div>
+</body>
+</html>
+`;
+
+    // Create and download PDF
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(pdfContent);
+    printWindow.document.close();
+    
+    // Wait for content to load then print
+    printWindow.onload = () => {
+      printWindow.print();
+      // Close the window after printing (optional)
+      setTimeout(() => {
+        printWindow.close();
+      }, 1000);
+    };
+  };
 
   const handleDelete = async () => {
     if (!myCafe) return;
@@ -1483,20 +1642,44 @@ const DashboardPage = () => {
               </Box>
               
               {/* Simple Filter */}
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
-                <FilterListIcon color="primary" />
-                <TextField
-                  type="date"
-                  label="Filter by Date"
-                  size="small"
-                  value={filterDate}
-                  onChange={(e) => setFilterDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ minWidth: 200 }}
-                />
-                <Button variant="outlined" onClick={() => setFilterDate('')}>
-                  Clear
-                </Button>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 2, 
+                alignItems: 'center', 
+                mb: 3,
+                flexWrap: 'wrap'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <FilterListIcon color="primary" />
+                  <TextField
+                    type="date"
+                    label="Filter by Date"
+                    size="small"
+                    value={filterDate}
+                    onChange={(e) => setFilterDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ minWidth: 200 }}
+                  />
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button variant="outlined" onClick={() => setFilterDate('')}>
+                    Clear
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    color="success"
+                    startIcon={<DownloadIcon />}
+                    onClick={handleDownloadPDF}
+                    disabled={displayedBookings.length === 0}
+                    sx={{ 
+                      bgcolor: 'success.main',
+                      '&:hover': { bgcolor: 'success.dark' },
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    Download PDF
+                  </Button>
+                </Box>
               </Box>
 
               {/* Time Column Explanation */}
