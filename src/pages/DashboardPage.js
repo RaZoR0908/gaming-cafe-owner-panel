@@ -221,13 +221,10 @@ const DashboardPage = () => {
       // Call the auto-complete sessions API
       // Dynamic URL for mobile access
       const getBaseURL = () => {
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-          return 'http://localhost:5000';
-        }
-        return `http://${window.location.hostname}:5000`;
+        return process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
       };
       
-      const response = await fetch(`${getBaseURL()}/api/bookings/auto-complete-sessions`, {
+      const response = await fetch(`${getBaseURL()}/bookings/auto-complete-sessions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
