@@ -68,3 +68,13 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+
+)
+
+💻 Owner Panel (React Web App)
+• 📊 Dashboard – revenue, bookings, system utilization, customer insights
+• 🏪 Cafe Management – profiles, pricing, operating hours, open/close toggle
+• 📅 Bookings – real-time monitoring, walk-ins, session management & extension, OTP verification, auto-completion
+• 💻 Systems – availability tracking, maintenance, assignment, scheduling
+• ⭐ Reviews – monitoring, analytics, responses
