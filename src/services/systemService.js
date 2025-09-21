@@ -1,7 +1,15 @@
 import axios from 'axios';
 
+// Dynamic URL configuration for mobile access
+const getBaseURL = () => {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5000';
+  }
+  return `http://${window.location.hostname}:5000`;
+};
+
 // The base URL for all system-related API calls.
-const API_URL = 'http://localhost:5000/api/systems';
+const API_URL = `${getBaseURL()}/api/systems`;
 
 // Helper function to retrieve the user's authentication token from local storage.
 const getToken = () => {

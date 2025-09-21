@@ -1,8 +1,17 @@
 import axios from 'axios';
 
-const CAFE_API_URL = 'http://localhost:5000/api/cafes/';
-const BOOKING_API_URL = 'http://localhost:5000/api/bookings/';
-const REVIEW_API_URL = 'http://localhost:5000/api/reviews/';
+// Dynamic URL configuration for mobile access
+const getBaseURL = () => {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5000';
+  }
+  return `http://${window.location.hostname}:5000`;
+};
+
+const BASE_URL = getBaseURL();
+const CAFE_API_URL = `${BASE_URL}/api/cafes/`;
+const BOOKING_API_URL = `${BASE_URL}/api/bookings/`;
+const REVIEW_API_URL = `${BASE_URL}/api/reviews/`;
 
 // Helper function to get the user's token from local storage
 const getAuthHeader = () => {

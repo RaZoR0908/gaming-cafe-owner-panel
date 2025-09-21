@@ -173,8 +173,8 @@ const CreateCafePage = () => {
   
   const navigate = useNavigate(); // RESTORED: Using the actual hook from react-router-dom.
 
-  const CLOUDINARY_CLOUD_NAME = 'dhohkvrmx';
-  const CLOUDINARY_UPLOAD_PRESET = 'mda5k95v';
+  const CLOUDINARY_CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+  const CLOUDINARY_UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
 
   useEffect(() => {
     if (!formData.address) { setGeocodeStatus(''); return; }

@@ -142,8 +142,8 @@ const EditCafePage = () => {
   const [showManualCoords, setShowManualCoords] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false); // State for the success pop-up
 
-  const CLOUDINARY_CLOUD_NAME = 'dhohkvrmx';
-  const CLOUDINARY_UPLOAD_PRESET = 'mda5k95v';
+  const CLOUDINARY_CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+  const CLOUDINARY_UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
 
   useEffect(() => {
     const fetchCafe = async () => {
